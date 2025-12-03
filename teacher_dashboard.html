@@ -1,0 +1,264 @@
+ <!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Teacher Dashboard — Attendance Portal</title>
+
+<style>
+:root{
+  --sky-100: #e6f6ff;
+  --sky-300: #bfe9ff;
+  --sky-500: #66c2ff;
+  --white: #ffffff;
+  --text: #0b3a57;
+  --muted: #5a6b7a;
+  --card-shadow: rgba(11,58,87,0.08);
+  font-family: Inter, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0; background: linear-gradient(180deg,var(--sky-100),#f8feff); color:var(--text); padding:28px;}
+.app {max-width:980px; margin:0 auto;}
+.header {background: var(--white); padding:20px 22px; border-radius:12px; box-shadow: 0 8px 20px var(--card-shadow); display:flex; justify-content:space-between; align-items:center; gap:16px;}
+.brand {display:flex; gap:12px; align-items:center;}
+.logo {width:48px; height:48px; border-radius:10px; background:linear-gradient(135deg,var(--sky-500),var(--sky-300)); display:flex; align-items:center; justify-content:center; color:var(--white); font-weight:700; font-size:18px; box-shadow: 0 6px 14px rgba(0,0,0,0.06);}
+.title {font-size:18px; font-weight:700;}
+.subtitle {font-size:13px; color:var(--muted); margin-top:2px;}
+.card {background:var(--white); margin-top:18px; border-radius:12px; padding:18px; box-shadow: 0 8px 18px var(--card-shadow);}
+.controls {display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:18px;}
+label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+select, input[type="datetime-local"] {padding:10px 12px; border-radius:8px; border:1px solid #e6f2f9; background:linear-gradient(180deg,#fff,#fbfeff); min-width:160px; font-size:14px;}
+.output-box {padding:14px; background:#fff; border-radius:10px; box-shadow:0 6px 16px rgba(102,194,255,0.15); font-size:15px; margin-top:10px;}
+table{width:100%; border-collapse:collapse; margin-top:10px;}
+th, td{padding:8px; text-align:left; border-bottom:1px dashed #eef6fb;}
+th{background: linear-gradient(180deg,var(--sky-100),#fff);}
+.defaulter-row{background-color: rgba(194,61,61,0.1);}
+.present-btn, .absent-btn{padding:4px 8px; border:none; border-radius:4px; cursor:pointer; margin-right:4px;}
+.present-btn{background-color:#66c2ff; color:white;}
+.absent-btn{background-color:#c23d3d; color:white;}
+.muted{color:var(--muted);}
+.top-college-logo {position: fixed; top: 15px; left: 20px; z-index: 9999;}
+.top-college-logo img {height: 60px; object-fit: contain;}
+body{background-color:#f5f7f4; background-image:url('innerheadercommon.jpg'); background-repeat:no-repeat; background-position: top center; background-size:contain;}
+@media (max-width:600px){.header{flex-direction:column; align-items:flex-start}}
+</style>
+</head>
+<body>
+
+<div class="top-college-logo">
+  <img src="sieslogo.jpg" alt="College Logo">
+</div>
+
+<div class="app">
+  <!-- Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="logo">TA</div>
+      <div>
+        <div class="title">Teacher Dashboard</div>
+        <div class="subtitle">Sky Blue • Faculty View</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filters Section -->
+  <section class="card">
+    <div class="controls">
+      <div>
+        <label for="stream-select">Stream:</label>
+        <select id="stream-select">
+          <option value="BSCIT">BSCIT</option>
+          <option value="CS">CS</option>
+          <option value="BCOM">BCOM</option>
+          <option value="BBA">BBA</option>
+          <option value="BFM">BFM</option>
+        </select>
+      </div>
+      <div>
+        <label for="year-select">Year:</label>
+        <select id="year-select">
+          <option value="FY">First Year</option>
+          <option value="SY">Second Year</option>
+          <option value="TY">Third Year</option>
+        </select>
+      </div>
+      <div>
+        <label for="subject-select">Subject:</label>
+        <select id="subject-select">
+          <option value="DBMS">DBMS</option>
+          <option value="OS">OS</option>
+          <option value="DSA">DSA</option>
+          <option value="Math">Math</option>
+        </select>
+      </div>
+      <div>
+        <label for="lecture-time">Lecture Date & Time:</label>
+        <input type="datetime-local" id="lecture-time"/>
+      </div>
+      <div>
+        <label for="report-select">Report Type:</label>
+        <select id="report-select">
+          <option value="attendance">Take Attendance</option>
+          <option value="month">Monthly</option>
+          <option value="semester">Semester</option>
+          <option value="defaulter">Defaulter</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="attendance-section" class="output-box muted">
+      Select filters to proceed…
+    </div>
+  </section>
+</div>
+
+<script>
+// Sample student data
+const students = [
+  {id:1, name:"John Doe"},
+  {id:2, name:"Jane Smith"},
+  {id:3, name:"Alice Johnson"},
+  {id:4, name:"Bob Brown"},
+  {id:5, name:"Charlie Davis"},
+];
+
+// Attendance storage with lecture time
+let attendanceData = {}; // { 'DBMS_FY_BSCIT_2025-12-01T10:00': {1:'present', 2:'absent', ...} }
+
+function getKey(){
+  const stream = document.getElementById("stream-select").value;
+  const year = document.getElementById("year-select").value;
+  const subject = document.getElementById("subject-select").value;
+  const lectureTime = document.getElementById("lecture-time").value;
+  if(!lectureTime) return null;
+  return `${subject}_${year}_${stream}_${lectureTime}`;
+}
+
+function renderAttendance(){
+  const key = getKey();
+  if(!key){
+    document.getElementById("attendance-section").innerHTML = "<span class='muted'>Select lecture date & time first…</span>";
+    return;
+  }
+
+  if(!attendanceData[key]){
+    attendanceData[key] = {};
+    students.forEach(s=> attendanceData[key][s.id]='present'); // default present
+  }
+
+  const container = document.getElementById("attendance-section");
+  container.innerHTML = `<strong>Mark Attendance</strong><br>`;
+  const table = document.createElement('table');
+  table.innerHTML = '<thead><tr><th>Student</th><th>Attendance</th></tr></thead>';
+  const tbody = document.createElement('tbody');
+
+  students.forEach(s=>{
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${s.name}</td>
+      <td>
+        <input type="radio" name="att-${s.id}" value="present" ${attendanceData[key][s.id]==='present'?'checked':''}> Present
+        <input type="radio" name="att-${s.id}" value="absent" ${attendanceData[key][s.id]==='absent'?'checked':''}> Absent
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  table.appendChild(tbody);
+  container.appendChild(table);
+
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = "Save Attendance";
+  saveBtn.className="present-btn";
+  saveBtn.style.marginTop="10px";
+  saveBtn.onclick = ()=>{
+    students.forEach(s=>{
+      const val = document.querySelector(`input[name="att-${s.id}"]:checked`).value;
+      attendanceData[key][s.id] = val;
+    });
+    alert('Attendance saved for '+document.getElementById("lecture-time").value);
+  };
+  container.appendChild(saveBtn);
+}
+
+function renderReport(){
+  const report = document.getElementById("report-select").value;
+  const stream = document.getElementById("stream-select").value;
+  const year = document.getElementById("year-select").value;
+  const subject = document.getElementById("subject-select").value;
+  const container = document.getElementById("attendance-section");
+  container.innerHTML = '';
+
+  if(report==='month'){
+    container.innerHTML = `<strong>Monthly Report: ${subject} - ${year} - ${stream}</strong>`;
+    const table = document.createElement('table');
+    table.innerHTML = '<thead><tr><th>Lecture</th><th>Present</th><th>Absent</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+    let keys = Object.keys(attendanceData).filter(k=>k.includes(`${subject}_${year}_${stream}`));
+    keys.forEach((k,i)=>{
+      let present = Object.values(attendanceData[k]).filter(v=>v==='present').length;
+      let absent = Object.values(attendanceData[k]).filter(v=>v==='absent').length;
+      tbody.innerHTML += `<tr><td>Lecture ${i+1}</td><td>${present}</td><td>${absent}</td></tr>`;
+    });
+    table.appendChild(tbody);
+    container.appendChild(table);
+  }
+
+  else if(report==='semester'){
+    container.innerHTML = `<strong>Semester Report: ${subject} - ${year} - ${stream}</strong>`;
+    const table = document.createElement('table');
+    table.innerHTML = '<thead><tr><th>Student</th><th>Attendance %</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+    students.forEach(s=>{
+      let keys = Object.keys(attendanceData).filter(k=>k.includes(`${subject}_${year}_${stream}`));
+      let totalLectures = keys.length;
+      let presentCount = keys.reduce((acc,k)=>acc + (attendanceData[k][s.id]==='present'?1:0),0);
+      let perc = totalLectures? Math.round((presentCount/totalLectures)*100) : 0;
+      let rowClass = perc<75?'defaulter-row':'';
+      tbody.innerHTML += `<tr class="${rowClass}"><td>${s.name}</td><td>${perc}%</td></tr>`;
+    });
+    table.appendChild(tbody);
+    container.appendChild(table);
+  }
+
+  else if(report==='defaulter'){
+    container.innerHTML = `<strong>Defaulter List: ${subject} - ${year} - ${stream}</strong>`;
+    const table = document.createElement('table');
+    table.innerHTML = '<thead><tr><th>Student</th><th>Attendance %</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+    students.forEach(s=>{
+      let keys = Object.keys(attendanceData).filter(k=>k.includes(`${subject}_${year}_${stream}`));
+      let totalLectures = keys.length;
+      let presentCount = keys.reduce((acc,k)=>acc + (attendanceData[k][s.id]==='present'?1:0),0);
+      let perc = totalLectures? Math.round((presentCount/totalLectures)*100) : 0;
+      if(perc<75){
+        tbody.innerHTML += `<tr class="defaulter-row"><td>${s.name}</td><td>${perc}%</td></tr>`;
+      }
+    });
+    table.appendChild(tbody);
+    container.appendChild(table);
+  }
+
+  else{
+    renderAttendance();
+  }
+}
+
+// Event listeners
+document.querySelectorAll("select, #lecture-time").forEach(sel=>{
+  sel.addEventListener("change", ()=>{
+    const report = document.getElementById("report-select").value;
+    if(report==='attendance'){
+      renderAttendance();
+    } else {
+      renderReport();
+    }
+  });
+});
+
+// Initial load
+renderAttendance();
+</script>
+
+</body>
+</html>
