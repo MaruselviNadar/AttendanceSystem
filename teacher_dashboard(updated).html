@@ -167,31 +167,56 @@ function renderAttendance(){
   table.appendChild(tbody);
   container.appendChild(table);
 
-  const saveBtn = document.createElement('button');
+    const saveBtn = document.createElement('button');
   saveBtn.textContent = "Save Attendance";
-  saveBtn.className="present-btn";
-  saveBtn.style.marginTop="10px";
-  saveBtn.onclick = ()=>{
-    students.forEach(s=>{
-      const val = document.querySelector(`input[name="att-${s.id}"]:checked`).value;
-      attendanceData[key][s.id] = val;
+  saveBtn.className = "present-btn";
+  saveBtn.style.marginTop = "10px";
+
+  saveBtn.onclick = () => {
+    const lectureAttendance = {};
+
+    // Collect current selections
+    students.forEach(s => {
+      const selected = document.querySelector(`input[name="att-${s.id}"]:checked`);
+      const val = selected ? selected.value : "absent";
+      lectureAttendance[s.id] = val;
+      attendanceData[key][s.id] = val;  // keep local cache updated
     });
-    
-    fetch("http://127.0.0.1:5000/save_attendance",{
-      method:"post",
-      headers:{"content-Type":"application/json"},
-      body:JSON.stringify({
-        lecture_key:key,
-        subject:document.getElementById("subject-select").value,
-        stream:document.getElementById("stream-select"),
-        lecture_date_time:document.getElementById("lecture-time").value,
-        attendance:attendanceData
-      })
+
+    const payload = {
+      lecture_key: key,
+      subject: document.getElementById("subject-select").value,
+      year: document.getElementById("year-select").value,
+      stream: document.getElementById("stream-select").value,
+      lecture_date_time: document.getElementById("lecture-time").value,
+      attendance: lectureAttendance
+    };
+
+    fetch("http://127.0.0.1:5000/save_attendance", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
     })
-    .then(res=>res.json())
-    .then(data=>alert(data.message));
+    .then(async res => {
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      alert(data.message);
+    })
+    .catch(err => {
+      console.error("Error saving attendance:", err);
+      alert("Failed to save attendance. Check console.");
+    });
   };
+
   container.appendChild(saveBtn);
+
 }
 
 function renderReport(){
