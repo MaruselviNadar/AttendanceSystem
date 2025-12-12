@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-image: url('static/innerheadercommon.jpg');
+        background-repeat: no-repeat;
+        background-position: top center;
+        background-size: contain;
+        background-color: #f5f7f4;
+        padding-top: 120px;
+    }
+
+    .center-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 80vh;
+    }
+
+    .container {
+        width: 350px;
+        background: white;
+        padding: 25px 30px;
+        border-radius: 12px;
+        box-shadow: 0px 0px 12px rgba(0,0,0,0.15);
+        border: 2px solid #004a99;
+        text-align: left;
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        text-align: center;
+        color: #004a99;
+        margin-bottom: 20px;
+        font-weight: bold;
+    }
+
+    label {
+        font-size: 14px;
+        font-weight: bold;
+        display: block;
+        margin-top: 10px;
+        color: #003366;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #004a99;
+        border-radius: 6px;
+        font-size: 15px;
+    }
+
+    input:focus, select:focus {
+        outline: none;
+        border-color: #002f66;
+        box-shadow: 0 0 5px rgba(0, 74, 153, 0.4);
+    }
+
+    .btn {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        margin-top: 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        color: white;
+        font-size: 15px;
+        font-weight: bold;
+        background: #004a99;
+    }
+
+    .btn:hover {
+        background: #002f66;
+    }
+
+    .back-btn {
+        background-color: #666;
+    }
+
+    .back-btn:hover {
+        background-color: #444;
+    }
+
+    /* TABLE VIEW */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    th {
+        background: #004a99;
+        color: white;
+        padding: 10px;
+    }
+
+    td {
+        padding: 10px;
+        text-align: center;
+        border-bottom: 1px solid #aaa;
+    }
+
+    tr:nth-child(even) {
+        background: #f2f2f2;
+    }
+
+    /* Logo on top left */
+    .top-college-logo {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 9999;
+    }
+
+    .top-college-logo img {
+        height: 70px;
+    }
+
+</style>
+</head>
+
+<body>
+
+<div class="top-college-logo">
+    <img src="static/sieslogo.jpg" alt="College Logo">
+</div>
+
+<div class="center-wrapper">
+
+    <!-- MAIN MENU -->
+    <div class="container" id="mainMenu">
+        <h2>Welcome Admin</h2>
+        <button class="btn" onclick="showAddTeacher()">Add Teacher</button>
+        <button class="btn" onclick="showViewTeacher()">View Teachers</button>
+        <button class="btn" onclick="showDeleteTeacher()">Delete Teacher</button>
+    </div>
+
+    <!-- ADD TEACHER -->
+    <div class="container" id="addTeacher" style="display:none;">
+        <h2>Add Teacher</h2>
+
+        <label>Teacher Name</label>
+        <input type="text" id="tname" placeholder="Enter name">
+
+        <label>Department</label>
+        <select id="tdept">
+            <option value="">Select Department</option>
+            <option>CS</option>
+            <option>IT</option>
+        </select>
+
+        <label>Teacher ID</label>
+        <input type="text" id="tid" placeholder="Enter Teacher ID">
+
+        <label>Password</label>
+        <input type="password" id="tpass" placeholder="Enter password">
+
+        <button class="btn" onclick="saveTeacher()">Save</button>
+        <button class="btn back-btn" onclick="goBack()">Back</button>
+    </div>
+
+    <!-- VIEW TEACHER -->
+    <div class="container" id="viewTeacher" style="display:none; width:500px;">
+        <h2>Teacher List</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Dept</th>
+                    <th>ID</th>
+                </tr>
+            </thead>
+            <tbody id="teacherTable"></tbody>
+        </table>
+        <button class="btn back-btn" onclick="goBack()">Back</button>
+    </div>
+
+    <!-- DELETE TEACHER -->
+    <div class="container" id="deleteTeacher" style="display:none;">
+        <h2>Delete Teacher</h2>
+
+        <label>Select Teacher</label>
+        <select id="deleteList"></select>
+
+        <button class="btn" onclick="deleteTeacherData()">Delete</button>
+        <button class="btn back-btn" onclick="goBack()">Back</button>
+    </div>
+
+</div>
+
+<script>
+    let teachers = [];
+
+    function hideAll() {
+        document.getElementById("mainMenu").style.display = "none";
+        document.getElementById("addTeacher").style.display = "none";
+        document.getElementById("viewTeacher").style.display = "none";
+        document.getElementById("deleteTeacher").style.display = "none";
+    }
+
+    function showAddTeacher() {
+        hideAll();
+        document.getElementById("addTeacher").style.display = "block";
+    }
+
+    function showViewTeacher() {
+        hideAll();
+        document.getElementById("viewTeacher").style.display = "block";
+        loadTable();
+    }
+
+    function showDeleteTeacher() {
+        hideAll();
+        document.getElementById("deleteTeacher").style.display = "block";
+        loadDeleteList();
+    }
+
+    function goBack() {
+        hideAll();
+        document.getElementById("mainMenu").style.display = "block";
+    }
+
+    // SAVE TEACHER
+    function saveTeacher() {
+    let name = document.getElementById("tname").value;
+    let department = document.getElementById("tdept").value;
+    let teacher_id = document.getElementById("tid").value;
+    let password = document.getElementById("tpass").value;
+
+    fetch("/add_teacher", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            name: name,
+            department: department,
+            teacher_id: teacher_id,
+            password: password
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        
+        document.getElementById("tname").value = "";
+        document.getElementById("tdept").value = "";
+        document.getElementById("tid").value = "";
+        document.getElementById("tpass").value = "";
+    })
+    .catch(err => alert("Error: " + err));
+}
+
+
+
+    // LOAD TABLE
+    function loadTable() {
+    fetch('/get_teachers')
+    .then(res => res.json())
+    .then(data => {
+        let table = document.getElementById("teacherTable");
+        table.innerHTML = "";
+        data.forEach(t => {
+            table.innerHTML += `
+                <tr>
+                    <td>${t.name}</td>
+                    <td>${t.department}</td>
+                    <td>${t.teacher_id}</td>
+                </tr>`;
+        });
+    });
+}
+
+
+    // LOAD DELETE DROPDOWN
+    function loadDeleteList() {
+    fetch('/get_teachers')
+    .then(res => res.json())
+    .then(data => {
+        let list = document.getElementById("deleteList");
+        list.innerHTML = "";
+        data.forEach(t => {
+            list.innerHTML += `<option value="${t.teacher_id}">${t.name} (${t.teacher_id})</option>`;
+        });
+    });
+}
+
+
+    // DELETE TEACHER
+    function deleteTeacherData() {
+    let tid = document.getElementById("deleteList").value;
+
+    fetch('/delete_teacher', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teacher_id: tid })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+
+        // Refresh dropdown
+        loadDeleteList();
+
+        // Refresh table if currently viewing
+        loadTable();
+    })
+    .catch(err => alert("Error: " + err));
+}
+
+
+</script>
+
+</body>
+</html>
