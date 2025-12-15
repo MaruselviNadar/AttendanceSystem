@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login Portal</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f5f7f4;
+        background-image: url('static/innerheadercommon.jpg');
+        background-repeat: no-repeat;
+        background-position: top center;
+        background-size: contain;
+    }
+
+    .box {
+        width: 350px;
+        margin: 120px auto;
+        background: white;
+        padding: 25px 30px;
+        border-radius: 12px;
+        box-shadow: 0px 0px 12px rgba(0,0,0,0.15);
+        border: 2px solid #004a99;
+        text-align: center;
+    }
+
+    .logo {
+        width: 120px;
+        margin-bottom: 15px;
+    }
+
+    h2 {
+        color: #004a99;
+        margin-bottom: 20px;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #004a99;
+        border-radius: 6px;
+        font-size: 15px;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 10px;
+        background: #004a99;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 17px;
+        margin-top: 15px;
+    }
+</style>
+
+</head>
+<body>
+    <div class="box">
+    <img src="static/sieslogo.jpg" class="logo" alt="Logo">
+
+    <h2>Admin Login</h2>
+
+    <input type="text" id="username" placeholder="Admin Username" required>
+    <input type="password" id="password" placeholder="Enter Password" required>
+
+    <button class="btn" onclick="login()">LOGIN</button>
+</div>
+
+
+
+<script>
+    function login() {
+    let user = document.getElementById("username").value;
+    let pass = document.getElementById("password").value;
+
+    fetch("/login", {
+        method: "POST",
+        headers:{
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({username: user, password: pass})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === "success"){
+            // Redirect to dashboard
+            window.location.href = "/dashboard";
+        } else {
+            alert("Invalid Username or Password");
+
+           
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+        }
+    })
+    .catch(err => alert("Error: " + err));
+}
+
+</script>
+
+</body>
+</html>

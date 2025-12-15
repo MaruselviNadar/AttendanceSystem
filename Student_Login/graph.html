@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Student Attendance Portal</title>
+<style>
+  :root{
+    --sky-100: #e6f6ff;
+    --sky-300: #bfe9ff;
+    --sky-500: #66c2ff;
+    --white: #ffffff;
+    --text: #0b3a57;
+    --muted: #5a6b7a;
+    --card-shadow: rgba(11,58,87,0.08);
+    font-family: Inter, Roboto, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background: linear-gradient(180deg,var(--sky-100),#f8feff); color:var(--text); padding:28px;}
+  .app {max-width:980px; margin:0 auto;}
+  .header {background: var(--white); padding:20px 22px; border-radius:12px; box-shadow: 0 8px 20px var(--card-shadow); display:flex; justify-content:space-between; align-items:center; gap:16px;}
+  .brand {display:flex; gap:12px; align-items:center;}
+  .logo {width:48px; height:48px; border-radius:10px; background:linear-gradient(135deg,var(--sky-500),var(--sky-300)); display:flex; align-items:center; justify-content:center; color:var(--white); font-weight:700; font-size:18px; box-shadow: 0 6px 14px rgba(0,0,0,0.06);}
+  .title {font-size:18px; font-weight:700;}
+  .subtitle {font-size:13px; color:var(--muted); margin-top:2px;}
+  .menu {display:flex; gap:10px;}
+  .menu button{background:transparent; border:1px solid transparent; padding:8px 14px; border-radius:8px; cursor:pointer; font-weight:600; color:var(--text);}
+  .menu button.active{background: linear-gradient(90deg,var(--sky-300),var(--sky-100)); border:1px solid var(--sky-300); box-shadow: 0 6px 12px rgba(102,194,255,0.12);}
+  .card {background:var(--white); margin-top:18px; border-radius:12px; padding:18px; box-shadow: 0 8px 18px var(--card-shadow);}
+  .controls {display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:14px;}
+  label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  select, .info {padding:10px 12px; border-radius:8px; border:1px solid #e6f2f9; background:linear-gradient(180deg,#fff,#fbfeff); min-width:160px; font-size:14px;}
+  .table-wrap {overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; margin-top:6px; font-size:14px;}
+  th, td{text-align:left; padding:12px 10px; border-bottom:1px dashed #eef6fb;}
+  th{background: linear-gradient(180deg,var(--sky-100),#fff); font-weight:700; color:var(--text);}
+  .muted {color:var(--muted); font-size:13px;}
+  .stats {display:flex; gap:16px; align-items:center; margin-top:12px; flex-wrap:wrap;}
+  .stat {padding:10px 14px; border-radius:10px; background:linear-gradient(180deg,#fff,#fbfeff); border:1px solid #eef8ff; box-shadow:0 6px 12px rgba(102,194,255,0.06);}
+  .defaulter-yes {color:#c23d3d; font-weight:700;}
+  .defaulter-row {background-color: rgba(194,61,61,0.1);}
+  @media (max-width:600px){.header{flex-direction:column; align-items:flex-start} .menu { width:100%; justify-content:flex-start; flex-wrap:wrap }}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #f5f7f4;
+    background-image: url('innerheadercommon.jpg');
+    background-repeat: no-repeat;
+    background-position: top center;
+    background-size: contain;
+}
+
+.top-college-logo {
+  position: fixed;
+  top: 15px;
+  left: 20px;
+  z-index: 9999;
+}
+
+.top-college-logo img {
+  height: 60px;
+  object-fit: contain;
+}
+
+:root{
+  --sky-100: #f2f6fd;
+  --sky-300: #9ec9ff;
+  --sky-500: #004aad;
+  --text: #003366;
+  --card-shadow: rgba(0,0,0,0.12);
+}
+
+.header, .card {
+  border: 2px solid #004aad;
+}
+
+button {
+  background-color: #004aad;
+  color: #fff;
+}
+
+button:hover {
+  background-color: #003080;
+}
+
+</style>
+</head>
+<body>
+
+<div class="top-college-logo">
+  <img src="sieslogo.jpg" alt="College Logo">
+</div>
+
+<div class="app" role="main">
+  <div class="header" role="banner">
+    <div class="brand">
+      <div class="logo">SA</div>
+      <div>
+        <div class="title">Student Attendance Portal</div>
+        <div class="subtitle">Sky Blue • Student view</div>
+      </div>
+    </div>
+
+    <nav class="menu" aria-label="Report type">
+      <!-- CHANGED: Month → Monthly -->
+      <button id="btn-month" class="active" data-type="month">Monthly Report</button>
+      <button id="btn-sem" data-type="semester">Semester Report</button>
+      <button id="btn-def" data-type="defaulter">Defaulter</button>
+    </nav>
+  </div>
+
+  <section class="card" aria-live="polite">
+    <div class="controls" id="controls">
+      <div>
+        <label for="student-name">Student:</label>
+        <div class="info" id="student-name" role="status">Loading student info...</div>
+      </div>
+    </div>
+
+    <div id="output"></div>
+  </section>
+</div>
+
+<script>
+const sample = {
+  subjects: ['DBMS','OS','DSA','Math'],
+  monthReport: {
+    'January': { DBMS:{attended:18, absent:2, total:20}, OS:{attended:16, absent:4, total:20}, DSA:{attended:14, absent:6, total:20} },
+    'February': { DBMS:{attended:15, absent:5, total:20} }
+  },
+  semesterReport: {
+    'Sem 1': { DBMS: '92%', OS: '88%', DSA:'85%' },
+    'Sem 2': { DBMS: '89%', OS: '85%' },
+    'Sem 3': { DBMS: '70%', OS: '87%' },
+    'Sem 4': { DBMS: '88%', OS: '84%' }
+  }
+};
+
+const state = {
+  mode:'month',
+  month:'January',
+  semester:'Sem 3',
+  subject: sample.subjects[0],
+};
+
+function q(id){ return document.getElementById(id); }
+function createOption(text,value){ const o=document.createElement('option'); o.value=value; o.textContent=text; return o; }
+
+function getSemestersForMode(){
+  return ['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5','Sem 6'];
+}
+
+async function loadStudentInfo(studentId) {
+  const data = { name: "John Doe", course: "BSc Computer Science" };
+  q('student-name').textContent = `${data.name} — ${data.course}`;
+}
+loadStudentInfo('123');
+
+function renderControls(){
+  const ctrl=q('controls');
+  while(ctrl.children.length>1) ctrl.removeChild(ctrl.lastChild);
+
+  if(state.mode==='month'){
+    const wrapper=document.createElement('div');
+    const lbl=document.createElement('label'); lbl.textContent='Select month:';
+    const sel=document.createElement('select'); sel.id='sel-month';
+    ['January','February','March','April','May','June','July','August','September','October','November','December']
+      .forEach(m=>sel.appendChild(createOption(m,m)));
+    sel.value=state.month;
+    sel.addEventListener('change',e=>{state.month=e.target.value; renderOutput();});
+    wrapper.appendChild(lbl); wrapper.appendChild(sel);
+    ctrl.appendChild(wrapper);
+  }
+
+  else if(state.mode==='semester'){
+    const wrapper=document.createElement('div');
+    const lbl=document.createElement('label'); lbl.textContent='Select semester:';
+    const sel=document.createElement('select'); sel.id='sel-sem';
+    getSemestersForMode().forEach(s=> sel.appendChild(createOption(s,s)));
+    sel.value=state.semester;
+    sel.addEventListener('change', e=>{ state.semester=e.target.value; renderOutput(); });
+    wrapper.appendChild(lbl); wrapper.appendChild(sel);
+    ctrl.appendChild(wrapper);
+  }
+
+  else if(state.mode==='defaulter'){
+    const wrap2=document.createElement('div');
+    const lbl2=document.createElement('label'); lbl2.textContent='Select semester:';
+    const sel2=document.createElement('select'); sel2.id='sel-sem';
+    getSemestersForMode().forEach(s=> sel2.appendChild(createOption(s,s)));
+    sel2.value=state.semester;
+    sel2.addEventListener('change', e=>{ state.semester=e.target.value; renderOutput(); });
+    wrap2.appendChild(lbl2); wrap2.appendChild(sel2);
+    ctrl.appendChild(wrap2);
+
+    const wrap3=document.createElement('div');
+    const lbl3=document.createElement('label'); lbl3.textContent='Select subject:';
+    const sel3=document.createElement('select'); sel3.id='sel-sub';
+    sample.subjects.forEach(s=> sel3.appendChild(createOption(s,s)));
+    sel3.value=state.subject;
+    sel3.addEventListener('change', e=>{ state.subject=e.target.value; renderOutput(); });
+    wrap3.appendChild(lbl3); wrap3.appendChild(sel3);
+    ctrl.appendChild(wrap3);
+  }
+}
+
+function renderOutput(){
+  const out=q('output'); out.innerHTML='';
+
+  /* ---------------- MONTHLY REPORT (UPDATED TEXT) ---------------- */
+  if(state.mode==='month'){
+    const h=document.createElement('div'); 
+    h.innerHTML=`<strong class="muted">Monthly report — ${state.month}</strong>`; 
+    out.appendChild(h);
+
+    const wrap=document.createElement('div'); 
+    wrap.className='table-wrap';
+
+    const table=document.createElement('table'); 
+
+    /* CHANGED Attended → Present */
+    table.innerHTML='<thead><tr><th>Subject</th><th>Total</th><th>Present</th><th>Absent</th></tr></thead>';
+
+    const tb=document.createElement('tbody');
+    const data=sample.monthReport[state.month]||{};
+
+    sample.subjects.forEach(sub=>{
+      const d=data[sub] || {attended:'-', absent:'-', total:'-'};
+      let rowClass = '';
+      if(d.attended !== '-' && d.total !== '-') {
+        const perc = (d.attended / d.total) * 100;
+        if(perc < 75) rowClass = 'defaulter-row';
+      }
+
+      tb.insertAdjacentHTML(
+        'beforeend',
+        `<tr class="${rowClass}">
+          <td>${sub}</td>
+          <td>${d.total}</td>
+          <td>${d.attended}</td>   <!-- Present -->
+          <td>${d.absent}</td>
+        </tr>`
+      );
+    });
+
+    table.appendChild(tb); 
+    wrap.appendChild(table); 
+    out.appendChild(wrap);
+  }
+
+  /* ---------------- SEMESTER REPORT ---------------- */
+  else if(state.mode==='semester'){
+    const h=document.createElement('div'); 
+    h.innerHTML=`<strong class="muted">Semester report — ${state.semester}</strong>`; 
+    out.appendChild(h);
+
+    const wrap=document.createElement('div'); 
+    wrap.className='table-wrap';
+
+    const table=document.createElement('table'); 
+    table.innerHTML='<thead><tr><th>Subject</th><th>Attendance %</th></tr></thead>';
+
+    const tb=document.createElement('tbody');
+    const data=sample.semesterReport[state.semester]||{};
+
+    sample.subjects.forEach(sub=>{
+      if(data[sub]) {
+        let perc = parseInt(data[sub]);
+        const rowClass = perc < 75 ? 'defaulter-row' : '';
+        tb.insertAdjacentHTML('beforeend',
+          `<tr class="${rowClass}"><td>${sub}</td><td>${data[sub]}</td></tr>`
+        );
+      }
+    });
+
+    table.appendChild(tb); 
+    wrap.appendChild(table); 
+    out.appendChild(wrap);
+  }
+
+  /* ---------------- DEFAULTER ---------------- */
+  else if(state.mode==='defaulter'){
+    const h=document.createElement('div'); 
+    h.innerHTML=`<strong class="muted">Defaulter — ${state.semester} / ${state.subject}</strong>`; 
+    out.appendChild(h);
+
+    let attPercent=null;
+    const sem=sample.semesterReport[state.semester]||{};
+    if(sem[state.subject]) attPercent=parseInt(sem[state.subject]);
+
+    const stats=document.createElement('div'); 
+    stats.className='stats';
+
+    const p1=document.createElement('div'); 
+    p1.className='stat';
+    p1.innerHTML=`<div class="muted">Attendance %</div><div style="font-weight:800;font-size:20px">${attPercent!==null?attPercent+'%':'—'}</div>`;
+    stats.appendChild(p1);
+
+    const isDefaulter=(attPercent!==null) && attPercent<75;
+    const p2=document.createElement('div'); p2.className='stat';
+    p2.innerHTML=`<div class="muted">Defaulter</div><div style="font-weight:800;font-size:18px" class="${isDefaulter?'defaulter-yes':''}">${isDefaulter?'YES':'NO'}</div>`;
+    stats.appendChild(p2);
+
+    out.appendChild(stats);
+const bar = document.createElement('div');
+bar.style.width = '100%';
+bar.style.height = '12px';
+bar.style.borderRadius = '6px';
+bar.style.background = '#e0e7f5';
+bar.style.overflow = 'hidden';
+bar.style.marginTop = '8px';
+
+const fill = document.createElement('div');
+fill.style.height = '100%';
+fill.style.width = attPercent + '%';
+fill.style.background = attPercent < 75 ? '#c23d3d' : '#004aad';
+fill.style.transition = '0.4s';
+
+bar.appendChild(fill);
+stats.appendChild(bar);
+
+  }
+}
+
+document.querySelectorAll('.menu button').forEach(btn=>{
+  btn.addEventListener('click', e=>{
+    document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode=btn.dataset.type;
+    renderControls();
+    renderOutput();
+  });
+});
+
+renderControls();
+renderOutput();
+</script>
+
+</body>
+</html>
