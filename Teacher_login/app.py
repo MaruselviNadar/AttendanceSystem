@@ -221,5 +221,69 @@ def monthly_student_report():
         print("Monthly report error:", e)
         return jsonify({"error": str(e)}), 500
 
+#--------Defaulter--------#
+
+
+@app.route('/api/defaulter_report', methods=['POST'])
+def defaulter_report():
+    try:
+        data = request.json
+
+        subject = data['subject']
+        year = int(data['year'])           
+        stream = data['stream']
+        from_date = data['from_date']      
+        to_date = data['to_date']          
+        threshold = int(data.get('threshold', 75))
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        query = """
+        SELECT
+            s.id AS student_id,
+            s.name AS student_name,
+            COUNT(a.id) AS total_lectures,
+            SUM(a.status = 'present') AS present_count,
+            ROUND(
+                (SUM(a.status = 'present') / COUNT(a.id)) * 100, 2
+            ) AS percentage
+        FROM students s
+        JOIN attendance a ON s.id = a.student_id
+        WHERE s.stream = %s
+          AND s.year = %s
+          AND a.subject = %s
+          AND DATE(a.lecture_date) BETWEEN %s AND %s
+        GROUP BY s.id, s.name
+        HAVING percentage < %s
+        ORDER BY percentage ASC
+        """
+
+        cursor.execute(
+            query,
+            (
+                stream,
+                year,
+                subject,
+                from_date,
+                to_date,
+                threshold
+            )
+        )
+
+        result = cursor.fetchall()
+        return jsonify(result)
+
+    except Exception as e:
+        print("Defaulter error:", e)
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)
