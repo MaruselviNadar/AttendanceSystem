@@ -13,8 +13,8 @@
 
     background-image: url('innerheadercommon.jpg');
     background-repeat: no-repeat;
-    background-position: top center;   /* like website */
-    background-size: contain;          /* NOT full screen */
+    background-position: top center;
+    background-size: contain;
    }
 
     .box {
@@ -37,7 +37,7 @@
 
     h2 {
         margin-bottom: 20px;
-        color: #004a99;              /* SIES style blue */
+        color: #004a99;
     }
 
     label {
@@ -63,7 +63,7 @@
     .btn {
         width: 100%;
         padding: 10px;
-        background: #004a99;          /* Primary SIES style blue */
+        background: #004a99;
         color: white;
         border: none;
         font-size: 16px;
@@ -72,7 +72,19 @@
     }
 
     .btn:hover {
-        background: #002f66;          /* Darker blue hover */
+        background: #002f66;
+    }
+
+    .btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .error-message {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 10px;
+        display: none;
     }
 </style>
 
@@ -80,36 +92,110 @@
 <body>
 
 <div class="box">
-    <!-- College Logo -->
     <img src="sieslogo.jpg" alt="College Logo" class="logo">
 
     <h2>Student Portal</h2>
 
-    <form>
+    <form id="loginForm">
         <label>Student ID:</label>
-        <input type="text" placeholder="Enter Student ID" required>
+        <input type="text" id="studentId" placeholder="Enter Student ID" required>
 
         <label>Stream:</label>
-        <select required>
+        <select id="stream" required>
             <option value="">Select Stream</option>
-            <option>CS</option>
-            <option>IT</option>
+            <option value="CS">CS</option>
+            <option value="IT">IT</option>
         </select>
 
         <label>Year:</label>
-        <select required>
+        <select id="year" required>
             <option value="">Select Year</option>
-            <option>FY</option>
-            <option>SY</option>
-            <option>TY</option>
+            <option value="FY">FY</option>
+            <option value="SY">SY</option>
+            <option value="TY">TY</option>
         </select>
 
         <label>Password:</label>
-        <input type="password" placeholder="Enter Password" required>
+        <input type="password" id="password" placeholder="Enter Password" required>
 
         <button type="submit" class="btn">LOGIN</button>
+        
+        <div class="error-message" id="errorMessage"></div>
     </form>
 </div>
+
+<script>
+// Configuration
+const API_BASE_URL = 'http://localhost:5000/api';
+
+// Get form element
+const loginForm = document.getElementById('loginForm');
+const errorMessage = document.getElementById('errorMessage');
+
+// Handle form submission
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // Get form values
+  const studentId = document.getElementById('studentId').value;
+  const stream = document.getElementById('stream').value;
+  const year = document.getElementById('year').value;
+  const password = document.getElementById('password').value;
+  
+  // Validate inputs
+  if (!studentId || !stream || !year || !password) {
+    showError('Please fill in all fields');
+    return;
+  }
+  
+  // Disable submit button
+  const submitBtn = document.querySelector('.btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Logging in...';
+  errorMessage.style.display = 'none';
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        student_id: studentId,
+        stream: stream,
+        year: year,
+        password: password
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok && data.success) {
+      // Login successful
+      submitBtn.textContent = 'Success! Redirecting...';
+      setTimeout(() => {
+        window.location.href = 'graph.html';
+      }, 500);
+    } else {
+      // Login failed
+      showError(data.error || 'Login failed. Please check your credentials.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'LOGIN';
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    showError('Unable to connect to server. Please make sure the Flask server is running.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'LOGIN';
+  }
+});
+
+function showError(message) {
+  errorMessage.textContent = message;
+  errorMessage.style.display = 'block';
+}
+</script>
 
 </body>
 </html>
