@@ -18,11 +18,12 @@
     }
 
     .center-wrapper {
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        min-height: 80vh;
-    }
+    display: flex;
+    flex-direction: column;   /* 🔥 THIS IS THE FIX */
+    align-items: center;
+    min-height: 80vh;
+}
+
 
     .container {
         width: 350px;
@@ -144,6 +145,8 @@
         <button class="btn" onclick="showAddTeacher()">Add Teacher</button>
         <button class="btn" onclick="showViewTeacher()">View Teachers</button>
         <button class="btn" onclick="showDeleteTeacher()">Delete Teacher</button>
+        <button class="btn" onclick="showAssignSubject()">Assign Subject</button>
+
     </div>
 
     <!-- ADD TEACHER -->
@@ -196,18 +199,54 @@
         <button class="btn" onclick="deleteTeacherData()">Delete</button>
         <button class="btn back-btn" onclick="goBack()">Back</button>
     </div>
+    <!-- ASSIGN SUBJECT -->
+<div class="container" id="assignSubjectBox" style="display:none; width:420px;">
+
+    <h2>Assign Subject to Teacher</h2>
+    <select id="teacherSelect">
+    <option value="" disabled selected>-- Select Teacher --</option>
+</select>
+
+    <label>Stream</label>
+    <select id="stream">
+        <option value="BSCIT">BSCIT</option>
+    </select>
+
+    <label>Year</label>
+    <select id="year">
+        <option value="First Year">First Year</option>
+    </select>
+
+<label>Semester</label>
+<select id="semester" onchange="loadSubjects()">
+    <option value="">-- Select Semester --</option>
+    <option value="1">Semester 1</option>
+    <option value="2">Semester 2</option>
+</select>
+
+    <label>Subject</label>
+    <select id="subjectSelect"></select>
+
+    <button class="btn" onclick="assignSubject()">Assign</button>
+</div>
+
+
+
 
 </div>
 
 <script>
+    
     let teachers = [];
 
     function hideAll() {
-        document.getElementById("mainMenu").style.display = "none";
-        document.getElementById("addTeacher").style.display = "none";
-        document.getElementById("viewTeacher").style.display = "none";
-        document.getElementById("deleteTeacher").style.display = "none";
-    }
+    document.getElementById("mainMenu").style.display = "none";
+    document.getElementById("addTeacher").style.display = "none";
+    document.getElementById("viewTeacher").style.display = "none";
+    document.getElementById("deleteTeacher").style.display = "none";
+    document.getElementById("assignSubjectBox").style.display = "none";
+}
+
 
     function showAddTeacher() {
         hideAll();
@@ -225,6 +264,11 @@
         document.getElementById("deleteTeacher").style.display = "block";
         loadDeleteList();
     }
+    function showAssignSubject() {
+    hideAll();
+    document.getElementById("assignSubjectBox").style.display = "block";
+}
+
 
     function goBack() {
         hideAll();
@@ -317,7 +361,88 @@
     .catch(err => alert("Error: " + err));
 }
 
+async function loadTeachers() {
+    const res = await fetch("/api/teachers");
+    const teachers = await res.json();
 
+    const teacherSelect = document.getElementById("teacherSelect");
+    teacherSelect.innerHTML = '<option value="" disabled selected>-- Select Teacher --</option>';
+
+    teachers.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.teacher_id;
+        opt.textContent = `${t.teacher_name} (${t.teacher_id})`;
+        teacherSelect.appendChild(opt);
+    });
+}
+
+
+async function loadSubjects() {
+    const stream = document.getElementById("stream").value;
+    const year = document.getElementById("year").value;
+    const semester = document.getElementById("semester").value;
+
+    if (!semester) return;
+
+    const res = await fetch(`/api/subjects?stream=${stream}&year=${year}&semester=${semester}`);
+    const data = await res.json();
+
+    console.log("Subjects API response:", data); // 🔥 DEBUG
+
+    const subjectSelect = document.getElementById("subjectSelect");
+    subjectSelect.innerHTML = '<option value="" disabled selected>-- Select Subject --</option>';
+
+    if (data.length === 0) {
+        alert("No subjects found for selected semester");
+        return;
+    }
+
+    data.forEach(subject => {
+        const option = document.createElement("option");
+        option.value = subject.id;
+        option.textContent = subject.subject_name;
+        subjectSelect.appendChild(option);
+    });
+}
+
+
+
+
+
+
+async function assignSubject() {
+    const teacher = teacherSelect.value;
+    const stream = streamSelect.value;
+    const year = yearSelect.value;
+    const semester = semesterSelect.value;
+    const subject = subjectSelect.value;
+
+    if (!teacher || !stream || !year || !semester || !subject) {
+        alert("Please select all fields before assigning");
+        return;
+    }
+
+    const payload = {
+        teacher_id: document.getElementById("teacherSelect").value,
+        subject_id: document.getElementById("subjectSelect").value,
+        stream: document.getElementById("stream").value,
+        year: document.getElementById("year").value,
+        semester: document.getElementById("semester").value
+    };
+
+    const res = await fetch("/api/assign-subject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    const result = await res.json();
+    alert(result.message);
+}
+
+
+loadTeachers();
+loadSubjects();
 </script>
 
 </body>

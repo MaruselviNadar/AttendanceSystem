@@ -6,7 +6,7 @@ def get_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="123456",        # your XAMPP MySQL password (empty = default)
+        password="root",        # your XAMPP MySQL password (empty = default)
         database="school"
     )
 
@@ -109,6 +109,65 @@ def delete_teacher():
     conn.close()
 
     return jsonify({"message": "Teacher deleted successfully"})
+
+# ------------------ ASSIGN SUBJECT --------------------
+
+@app.route("/api/teachers")
+def get_teachers_api():
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT teacher_id, teacher_name FROM teachers")
+    data = cur.fetchall()
+    conn.close()
+    return jsonify(data)
+
+@app.route("/api/subjects")
+def get_subjects():
+    stream = request.args.get("stream")
+    year = request.args.get("year")
+    semester = request.args.get("semester")
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    query = """
+        SELECT id, subject_name
+        FROM subjects
+        WHERE stream=%s AND year=%s AND semester=%s
+    """
+    cursor.execute(query, (stream, year, semester))
+    subjects = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify(subjects)
+
+
+
+@app.route("/api/assign-subject", methods=["POST"])
+def assign_subject():
+    data = request.json
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO teacher_subject_mapping
+        (teacher_id, subject_id, stream, year, semester)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (
+        data["teacher_id"],
+        data["subject_id"],
+        data["stream"],
+        data["year"],
+        data["semester"]
+    ))
+
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Subject assigned successfully"})
+
 
 
 
