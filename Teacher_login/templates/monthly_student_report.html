@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monthly Student Attendance Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #eef6ff;
+            color: #333;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .low {
+            color: red;
+            font-weight: bold;
+        }
+        .good {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Monthly Student Attendance Summary</h2>
+
+<table>
+    <tr>
+        <th>Student Name</th>
+        <th>Total Lectures Conducted</th>
+        <th>Total Lectures Attended</th>
+        <th>Total Lectures Missed</th>
+        <th>Attendance %</th>
+    </tr>
+
+    {% for row in report %}
+    <tr>
+        <td>{{ row.student_name }}</td>
+        <td>{{ row.total_lectures }}</td>
+        <td>{{ row.attended }}</td>
+        <td>{{ row.missed }}</td>
+        <td class="{{ 'good' if row.percentage >= 75 else 'low' }}">
+            {{ row.percentage }}%
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>

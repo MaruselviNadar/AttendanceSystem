@@ -291,6 +291,14 @@ function inRange(key, fromDate, toDate) {
   return lectureDate >= fromDate && lectureDate <= toDate;
 }
 
+// 🔁 Convert FY / SY / TY → 1 / 2 / 3
+function getNumericYear(y) {
+  if (y === "FY") return 1;
+  if (y === "SY") return 2;
+  if (y === "TY") return 3;
+  return y;
+}
+
 
 function renderReport(){
   const report = document.getElementById("report-select").value;
@@ -406,71 +414,83 @@ else if (report === 'defaulter') {
 
       <button id="applyDefaulter">Apply</button>
     </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Attendance %</th>
+        </tr>
+      </thead>
+      <tbody id="defaulter-body"></tbody>
+    </table>
   `;
 
-  const table = document.createElement('table');
-  table.innerHTML =
-    '<thead><tr><th>Student</th><th>Attendance %</th></tr></thead>';
 
-  const tbody = document.createElement('tbody');
-  table.appendChild(tbody);
-  container.appendChild(table);
+  
 
-  function renderDefaulters() {
-    tbody.innerHTML = "";
+  document.getElementById("applyDefaulter").addEventListener("click", () => {
 
-    const from = document.getElementById("def-from").value;
-    const to = document.getElementById("def-to").value;
+    const fromDate = document.getElementById("def-from").value;
+    const toDate = document.getElementById("def-to").value;
 
-    let fromDate = null;
-    let toDate = null;
-
-    if (from && to) {
-      fromDate = new Date(from);
-      toDate = new Date(to);
-      toDate.setHours(23, 59, 59, 999);
+    if (!fromDate || !toDate) {
+      alert("Please select both dates");
+      return;
     }
+    const numericYear = getNumericYear(year);  // FY -> 1, SY -> 2, TY -> 3
 
-    students.forEach(s => {
 
-      let keys = Object.keys(attendanceData).filter(k =>
-        k.includes(`${subject}_${year}_${stream}`)
-      );
+    fetch("/api/defaulter_report", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    year: numericYear,
+    stream: stream,
+    from_date: fromDate,
+    to_date: toDate,
+    threshold: 75
+  })
+})
+.then(async res => {
+  const text = await res.text();   // 👈 read raw response
 
-      // ✅ Date range filter
-      if (fromDate && toDate) {
-        keys = keys.filter(k => inRange(k, fromDate, toDate));
-      }
-
-      let totalLectures = keys.length;
-      let presentCount = keys.reduce(
-        (acc, k) => acc + (attendanceData[k][s.id] === 'present' ? 1 : 0),
-        0
-      );
-
-      let perc = totalLectures
-        ? Math.round((presentCount / totalLectures) * 100)
-        : 0;
-
-      // ✅ Name + % ALWAYS visible
-      if (perc < 75) {
-        tbody.innerHTML += `
-          <tr class="defaulter-row">
-            <td>${s.name}</td>
-            <td>${perc}%</td>
-          </tr>
-        `;
-      }
-    });
+  if (!res.ok) {
+    console.error("Server error:", text);
+    return [];
   }
 
-  // initial render
-  renderDefaulters();
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error("Invalid JSON:", text);
+    return [];
+  }
+})
+.then(data => {
+  const tbody = document.getElementById("defaulter-body");
+  tbody.innerHTML = "";
 
-  // Apply button
-  document
-    .getElementById("applyDefaulter")
-    .addEventListener("click", renderDefaulters);
+  if (!Array.isArray(data) || data.length === 0) {
+    tbody.innerHTML =
+      `<tr><td colspan="2">No defaulters found</td></tr>`;
+    return;
+  }
+
+  data.forEach(d => {
+    tbody.innerHTML += `
+      <tr class="defaulter-row">
+        <td>${d.student_name}</td>
+        <td>${d.percentage}%</td>
+      </tr>
+    `;
+  });
+})
+.catch(err => {
+  console.error("Defaulter fetch failed:", err);
+});
+
+  });
 }
 
 
