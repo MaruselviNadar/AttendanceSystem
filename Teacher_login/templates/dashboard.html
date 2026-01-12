@@ -167,14 +167,28 @@ body{background-color:#f5f7f4;  background-image: url("{{ url_for('static', file
 </div>
 
 <script>
-// Sample student data
-const students = [
-  {id:1, name:"John Doe"},
-  {id:2, name:"Jane Smith"},
-  {id:3, name:"Alice Johnson"},
-  {id:4, name:"Bob Brown"},
-  {id:5, name:"Charlie Davis"},
-];
+// student data
+let students = [];
+
+async function loadStudents() {
+  const department = document.getElementById("stream-select").value;
+  const year = document.getElementById("year-select").value;
+
+  const res = await fetch(
+    `/api/students?department=${department}&year=${year}`
+  );
+
+  students = await res.json();
+
+  if (!students.length) {
+    document.getElementById("attendance-section").innerHTML =
+      "<span class='muted'>No students found</span>";
+    return;
+  }
+
+  renderAttendance();
+}
+
 
 // Attendance storage with lecture time
 let attendanceData = {}; // { 'DBMS_FY_BSCIT_2025-12-01T10:00': {1:'present', 2:'absent', ...} }
@@ -480,19 +494,23 @@ else if (report === 'defaulter') {
 }
 
 // Event listeners
-document.querySelectorAll("select, #lecture-time").forEach(sel=>{
-  sel.addEventListener("change", ()=>{
-    const report = document.getElementById("report-select").value;
-    if(report==='attendance'){
-      renderAttendance();
-    } else {
-      renderReport();
-    }
-  });
+document.querySelectorAll("#stream-select, #year-select").forEach(sel => {
+  sel.addEventListener("change", loadStudents);
 });
+
+document.querySelectorAll("#subject-select, #lecture-time, #report-select")
+  .forEach(sel => {
+    sel.addEventListener("change", () => {
+      const report = document.getElementById("report-select").value;
+      report === "attendance" ? renderAttendance() : renderReport();
+    });
+  });
+
 
 // Initial load
 renderAttendance();
+loadStudents();
+
 </script>
 
 </body>

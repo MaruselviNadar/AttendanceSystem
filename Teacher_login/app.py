@@ -95,6 +95,52 @@ def dashboard():
     # This template should contain your Teacher Dashboard HTML/JS
     return render_template("dashboard.html", name=session["teacher_name"])
 
+#fetch student data
+@app.route("/api/students", methods=["GET"])
+def get_students_by_dept_year():
+    ui_department = request.args.get("department")
+    ui_year = request.args.get("year")
+
+    # 🔁 UI → DB mappings
+    department_map = {
+        "BSCIT": "IT",
+        "CS": "CS"
+    }
+
+    year_map = {
+        "First Year": "1",
+        "Second Year": "2",
+        "Third Year": "3",
+        "FY": "1",
+        "SY": "2",
+        "TY": "3"
+    }
+
+    department = department_map.get(ui_department)
+    year = year_map.get(ui_year)
+
+    if not department or not year:
+        return jsonify([])
+
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT id, name
+        FROM students
+        WHERE department = %s
+          AND year = %s
+        ORDER BY roll_no
+    """, (department, year))
+
+    students = cursor.fetchall()
+
+    cursor.close()
+    db.close()
+
+    return jsonify(students)
+
+
 
 @app.route("/logout")
 def logout():

@@ -154,6 +154,8 @@ td {
 <!-- ADD STUDENT -->
 <div id="addStudent" class="section">
     <h2>Add Student</h2>
+    <label>Student Name</label>
+    <input id="sname">
     <label>Department</label>
     <select id="sdept"><option value="">Select Department</option><option>CS</option><option>IT</option></select>
     <label>Year</label>
@@ -233,7 +235,14 @@ body:JSON.stringify({teacher_id:deleteList.value})})
 
 function saveStudent(){
 fetch("/add_student",{method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({department:sdept.value,year:syear.value,roll_no:sroll.value,password:spass.value})})
+body: JSON.stringify({
+    name: sname.value,
+    department: sdept.value,
+    year: syear.value,
+    roll_no: sroll.value,
+    password: spass.value
+})
+})
 .then(r=>r.json()).then(d=>alert(d.message));
 }
 

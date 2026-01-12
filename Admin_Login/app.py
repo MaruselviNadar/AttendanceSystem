@@ -161,8 +161,8 @@ def add_student():
     
     try:
         cursor.execute(
-            "INSERT INTO students (department, year, roll_no, password) VALUES (%s,%s,%s,%s)",
-            (data["department"], data["year"], data["roll_no"], data["password"])
+            "INSERT INTO students (name,department, year, roll_no, password) VALUES (%s,%s,%s,%s,%s)",
+            (data["name"],data["department"], data["year"], data["roll_no"], data["password"])
         )
         db.commit()
         message = "Student added successfully"
