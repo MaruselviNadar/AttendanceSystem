@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import mysql.connector
 
-app = Flask(__name__, template_folder=".", static_folder="static")
+app = Flask(__name__)
 app.secret_key = 'aK9$mP2xL#7qR5nW&8vT3jF6hB!4yC1zA@2eD9gH5iJ8kM3nP7qS4tU6wX1yZ0'
 
 # ---------- DATABASE CONNECTION ----------
@@ -9,7 +9,7 @@ def get_db_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="root",  # Change to your MySQL password
+        password="123456",  # Change to your MySQL password
         database="teacher"
     )
 
