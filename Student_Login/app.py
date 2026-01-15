@@ -1,184 +1,189 @@
-from flask import Flask, render_template,request, jsonify
+from flask import Flask, request, jsonify, session, render_template
 from flask_cors import CORS
-from datetime import datetime
-from collections import defaultdict
+from flask_mysqldb import MySQL
 
+app = Flask(__name__, static_url_path='/static', static_folder='static')
+app.secret_key = "attendance_secret"
 
-app = Flask(__name__)
-CORS(app) # Initialize CORS once.
+CORS(app, supports_credentials=True)
 
+# ---------------- MYSQL CONFIG ----------------
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = '123456'
+app.config['MYSQL_DB'] = 'attendance_db'
 
-MOCK_STUDENTS = {
-    "S1001": {"name": "John Doe", "stream": "BSc Computer Science", "semester": "Sem 3", "password": "pass"},
-    "S1002": {"name": "Jane Smith", "stream": "BSc Computer Science", "semester": "Sem 3", "password": "pass"},
-}
+mysql = MySQL(app)
 
-MOCK_SUBJECTS = {
-    "Sem 3": ["DBMS", "OS", "DSA", "Math"],
-}
+# ---------------- ERROR HANDLER ----------------
+@app.errorhandler(500)
+def handle_500(e):
+    # Try to get the original exception if available
+    original = getattr(e, "original_exception", e)
+    return jsonify({"success": False, "error": str(original)}), 500
 
-MOCK_CLASSES = {
-    # DBMS Classes in January
-    "C101": {"subject": "DBMS", "date": datetime(2025, 1, 5), "attended": ["S1001", "S1002"]},
-    "C102": {"subject": "DBMS", "date": datetime(2025, 1, 12), "attended": ["S1001"]},
-    "C103": {"subject": "DBMS", "date": datetime(2025, 1, 19), "attended": ["S1001", "S1002"]},
-    "C104": {"subject": "DBMS", "date": datetime(2025, 1, 26), "attended": ["S1002"]},
-    # OS Classes in January
-    "C201": {"subject": "OS", "date": datetime(2025, 1, 6), "attended": ["S1001", "S1002"]},
-    "C202": {"subject": "OS", "date": datetime(2025, 1, 13), "attended": ["S1001"]},
-    "C203": {"subject": "OS", "date": datetime(2025, 1, 20), "attended": ["S1001", "S1002"]},
-    "C204": {"subject": "OS", "date": datetime(2025, 1, 27), "attended": ["S1001"]},
-    # DSA Classes (low attendance for 'S1001')
-    "C301": {"subject": "DSA", "date": datetime(2025, 1, 7), "attended": ["S1002"]},
-    "C302": {"subject": "DSA", "date": datetime(2025, 1, 14), "attended": ["S1002"]},
-    "C303": {"subject": "DSA", "date": datetime(2025, 1, 21), "attended": ["S1002"]},
-    "C304": {"subject": "DSA", "date": datetime(2025, 1, 28), "attended": ["S1002"]},
-}
+@app.errorhandler(Exception)
+def handle_exception(e):
+    return jsonify({"success": False, "error": str(e)}), 500
 
+# ---------------- PAGE ROUTES ----------------
+@app.route("/")
+def index():
+    return render_template("login.html")
 
-@app.route('/')
-def final():
-    # This requires 'render_template' to be imported
-    return render_template('final.html', title='Student Attendance Portal')
-@app.route('/')
-def graph():
-    # This requires 'render_template' to be imported
-    return render_template('graph.html', title='Student Attendance graph')
+@app.route("/dashboard")
+def dashboard_page():
+    return render_template("dashboard.html")
 
+@app.route("/graph")
+def graph_page():
+    return render_template("graph.html")
 
-@app.route('/api/auth/login', methods=['POST'])
+# ---------------- HELPERS ----------------
+def login_required():
+    return 'student_id' in session
+
+# ---------------- LOGIN ----------------
+@app.route("/api/student/login", methods=["POST"])
 def login():
-    data = request.get_json()
-    student_id = data.get('student_id')
-    password = data.get('password')
+    data = request.json
+    student_id = data.get("student_id")
+    password = data.get("password")
 
-    student = MOCK_STUDENTS.get(student_id)
+    cur = mysql.connection.cursor()
+    cur.execute(
+        "SELECT * FROM students WHERE student_id=%s AND password=%s",
+        (student_id, password)
+    )
+    student = cur.fetchone()
 
-    if student and student['password'] == password:
-        return jsonify({
-            "message": "Login successful", 
-            "token": f"mock-jwt-for-{student_id}",
-            "student_id": student_id,
-            "name": student['name']
-        }), 200
-    
-    return jsonify({"message": "Invalid Student ID or Password"}), 401
+    if not student:
+        return jsonify({"success": False, "error": "Invalid credentials"}), 401
 
-@app.route('/api/student/profile/<student_id>', methods=['GET'])
-def get_student_profile(student_id):
-    student = MOCK_STUDENTS.get(student_id)
-    if student:
-        return jsonify({
-            "name": student['name'],
-            "stream": student['stream'],
-            "current_semester": student['semester']
-        }), 200
-    return jsonify({"message": "Student not found"}), 404
+    session['student_id'] = student_id
+    return jsonify({"success": True})
 
-@app.route('/api/attendance/month-report', methods=['POST'])
-def get_month_report():
-    data = request.get_json()
-    student_id = data.get('student_id')
-    month = data.get('month')
-    year = data.get('year')
+# ---------------- LOGOUT ----------------
+@app.route("/api/student/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return jsonify({"success": True})
 
-    if not all([student_id, month, year]):
-        return jsonify({"message": "Missing parameters"}), 400
+# ---------------- STUDENT INFO ----------------
+@app.route("/api/student/info")
+def student_info():
+    if not login_required():
+        return jsonify({"error": "Unauthorized"}), 401
 
-    attendance_data = defaultdict(lambda: {'attended': 0, 'total': 0})
-
-    for class_id, class_info in MOCK_CLASSES.items():
-        class_date = class_info['date']
-        
-        if class_date.month == month and class_date.year == year:
-            subject = class_info['subject']
-            
-            attendance_data[subject]['total'] += 1
-            
-            if student_id in class_info['attended']:
-                attendance_data[subject]['attended'] += 1
-
-    report = []
-    for subject, counts in attendance_data.items():
-        attended = counts['attended']
-        total = counts['total']
-        absent = total - attended
-        
-        if total > 0:
-            report.append({
-                "subject": subject,
-                "attended": attended,
-                "absent": absent,
-                "total": total
-            })
-
-    return jsonify(report), 200
-
-
-@app.route('/api/attendance/semester-report', methods=['POST'])
-def get_semester_report():
-    data = request.get_json()
-    student_id = data.get('student_id')
-    semester = data.get('semester')
-    
-    if not all([student_id, semester]):
-        return jsonify({"message": "Missing parameters"}), 400
-    
-    attendance_data = defaultdict(lambda: {'attended': 0, 'total': 0})
-
-    
-    
-    for class_id, class_info in MOCK_CLASSES.items():
-        subject = class_info['subject']
-        
-        attendance_data[subject]['total'] += 1
-        
-        if student_id in class_info['attended']:
-            attendance_data[subject]['attended'] += 1
-
-    report = []
-    for subject, counts in attendance_data.items():
-        attended = counts['attended']
-        total = counts['total']
-        
-        attendance_percent = round((attended / total) * 100) if total > 0 else 0
-        
-        report.append({
-            "subject": subject,
-            "attendance_percent": attendance_percent
-        })
-
-    return jsonify(report), 200
-
-@app.route('/api/attendance/defaulter-status', methods=['POST'])
-def get_defaulter_status():
-    data = request.get_json()
-    student_id = data.get('student_id')
-    subject_code = data.get('subject')
-
-    if not all([student_id, subject_code]):
-        return jsonify({"message": "Missing parameters"}), 400
-    
-    ATTENDANCE_THRESHOLD = 75 
-    attended_count = 0
-    total_count = 0
-
-    for class_id, class_info in MOCK_CLASSES.items():
-        if class_info['subject'] == subject_code:
-            total_count += 1
-            if student_id in class_info['attended']:
-                attended_count += 1
-    
-    attendance_percent = round((attended_count / total_count) * 100) if total_count > 0 else 0
-    is_defaulter = "YES" if attendance_percent < ATTENDANCE_THRESHOLD else "NO"
+    cur = mysql.connection.cursor()
+    cur.execute(
+        "SELECT name, department, stream, year FROM students WHERE student_id=%s",
+        (session['student_id'],)
+    )
+    data = cur.fetchone()
 
     return jsonify({
-        "subject": subject_code,
-        "attendance_percent": attendance_percent,
-        "is_defaulter": is_defaulter,
-        "threshold": ATTENDANCE_THRESHOLD
-    }), 200
+        "name": data[0],
+        "department": data[1],
+        "stream": data[2],
+        "year": data[3],
+        "student_id": session['student_id']
+    })
 
-if __name__ == '_main_':
-    # You are running on the default port 5000
+# ---------------- SUBJECTS ----------------
+@app.route("/api/student/subjects")
+def subjects():
+    if not login_required():
+        return jsonify({"error": "Unauthorized"}), 401
+
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT name FROM subjects")
+    rows = cur.fetchall()
+
+    return jsonify({
+        "subjects": [{"name": r[0]} for r in rows]
+    })
+
+# ---------------- MONTHLY ATTENDANCE ----------------
+@app.route("/api/student/attendance/monthly")
+def monthly():
+    if not login_required():
+        return jsonify({"error": "Unauthorized"}), 401
+
+    month = request.args.get("month")
+
+    cur = mysql.connection.cursor()
+    query = """
+    SELECT s.name,
+           COUNT(a.id) AS total,
+           SUM(a.status='Present') AS attended,
+           SUM(a.status='Absent') AS absent
+    FROM attendance a
+    JOIN subjects s ON a.subject_id = s.id
+    WHERE a.student_id=%s AND MONTHNAME(a.date)=%s
+    GROUP BY s.name
+    """
+    cur.execute(query, (session['student_id'], month))
+    rows = cur.fetchall()
+
+    result = {}
+    for r in rows:
+        result[r[0]] = {
+            "total": r[1],
+            "attended": r[2],
+            "absent": r[3]
+        }
+
+    return jsonify({"data": result})
+
+# ---------------- SEMESTER ATTENDANCE ----------------
+@app.route("/api/student/attendance/semester")
+def semester():
+    if not login_required():
+        return jsonify({"error": "Unauthorized"}), 401
+
+    sem = request.args.get("semester")
+
+    cur = mysql.connection.cursor()
+    query = """
+    SELECT s.name,
+           ROUND(SUM(a.status='Present')/COUNT(*)*100,2)
+    FROM attendance a
+    JOIN subjects s ON a.subject_id=s.id
+    WHERE a.student_id=%s AND a.semester=%s
+    GROUP BY s.name
+    """
+    cur.execute(query, (session['student_id'], sem))
+    rows = cur.fetchall()
+
+    return jsonify({
+        "data": {r[0]: r[1] for r in rows}
+    })
+
+# ---------------- DEFAULTER ----------------
+@app.route("/api/student/attendance/defaulter")
+def defaulter():
+    if not login_required():
+        return jsonify({"error": "Unauthorized"}), 401
+
+    sem = request.args.get("semester")
+    subject = request.args.get("subject")
+
+    cur = mysql.connection.cursor()
+    query = """
+    SELECT ROUND(SUM(a.status='Present')/COUNT(*)*100,2)
+    FROM attendance a
+    JOIN subjects s ON a.subject_id=s.id
+    WHERE a.student_id=%s AND a.semester=%s AND s.name=%s
+    """
+    cur.execute(query, (session['student_id'], sem, subject))
+    percent = cur.fetchone()[0] or 0
+
+    return jsonify({
+        "attendance_percentage": percent,
+        "is_defaulter": percent < 75
+    })
+
+# ---------------- RUN ----------------
+if __name__ == "__main__":
     app.run(debug=True)
