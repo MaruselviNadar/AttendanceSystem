@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f7f4;
+            background-image: url('/static/innerheadercommon.jpg');
+            background-repeat: no-repeat;
+            background-position: top center;
+            background-size: contain;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 120px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.15);
+            border: 2px solid #004aad;
+            text-align: center;
+        }
+
+        .logo {
+            width: 120px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #004aad;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #5a6b7a;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: #f8fbff;
+            border: 1px solid #d6e6ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .card p {
+            margin: 8px 0;
+            color: #003366;
+            font-weight: 600;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #004aad;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #003080;
+        }
+
+        .logout {
+            margin-top: 15px;
+            display: block;
+            color: #dc3545;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <img src="/static/sieslogo.jpg" alt="College Logo" class="logo">
+
+        <h2>Welcome, Student</h2>
+        <div class="subtitle">Student Dashboard</div>
+
+        <div class="card">
+            <p>Stream: <span id="stream">Loading...</span></p>
+            <p>Year: <span id="year">Loading...</span></p>
+            <p>Student ID: <span id="studentId">Loading...</span></p>
+        </div>
+
+        <a href="/graph" class="btn">View Attendance</a>
+
+        <a href="/" class="logout">Logout</a>
+    </div>
+
+    <script>
+        fetch('/api/student/info')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    // Not logged in
+                    window.location.href = '/';
+                } else {
+                    document.getElementById('stream').textContent = data.stream;
+                    document.getElementById('year').textContent = data.year;
+                    document.getElementById('studentId').textContent = data.student_id;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching student info:', error);
+                document.getElementById('stream').textContent = "Error";
+                document.getElementById('year').textContent = "Error";
+                document.getElementById('studentId').textContent = "Error";
+            });
+    </script>
+
+</body>
+
+</html>
