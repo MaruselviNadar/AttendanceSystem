@@ -21,8 +21,12 @@ CREATE TABLE students (
 -- --------------------------------------------------------
 DROP TABLE IF EXISTS subjects;
 CREATE TABLE subjects (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL
+    id INT NOT NULL AUTO_INCREMENT,
+    subject_name VARCHAR(100) NOT NULL,
+    stream VARCHAR(50) NOT NULL,
+    year VARCHAR(5) NOT NULL,
+    semester VARCHAR(20) NOT NULL,
+    PRIMARY KEY (id)
 );
 
 -- --------------------------------------------------------
