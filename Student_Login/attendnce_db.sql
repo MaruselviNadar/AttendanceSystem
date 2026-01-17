@@ -4,17 +4,22 @@ USE attendance_db;
 -- --------------------------------------------------------
 -- Users/Students
 -- --------------------------------------------------------
-DROP TABLE IF EXISTS students;
+DROP TABLE IF EXISTS students ;
+
 CREATE TABLE students (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id VARCHAR(20) UNIQUE NOT NULL,
-    name VARCHAR(100),
-    department VARCHAR(50),
-    year VARCHAR(5),
-    roll_no VARCHAR(50) UNIQUE NOT NULL,
-    stream VARCHAR(10),
-    password VARCHAR(100)
-);
+   id int NOT NULL AUTO_INCREMENT,
+   name varchar(100) NOT NULL,
+   department varchar(50) NOT NULL,
+   year int NOT NULL,
+   roll_no varchar(50) NOT NULL,
+   stream VARCHAR(10),
+   password varchar(255) NOT NULL,
+   created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY roll_no (`roll_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+    
 
 -- --------------------------------------------------------
 -- Subjects
