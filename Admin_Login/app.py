@@ -9,7 +9,7 @@ def get_db_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="123456",  # Change to your MySQL password
+        password="root",  # Change to your MySQL password
         database="teacher"
     )
 
@@ -51,26 +51,61 @@ def admin_logout():
 
 # ---------- TEACHER MANAGEMENT ----------
 
+# @app.route("/add_teacher", methods=["POST"])
+# def add_teacher():
+#     data = request.json
+#     db = get_db_connection()
+#     cursor = db.cursor()
+#     
+#     try:
+#         cursor.execute(
+#             "INSERT INTO teachers (name, department, teacher_id, password) VALUES (%s,%s,%s,%s)",
+#             (data["name"], data["department"], data["teacher_id"], data["password"])
+#         )
+#         db.commit()
+#         message = "Teacher added successfully"
+#     except mysql.connector.IntegrityError:
+#         message = "Teacher ID already exists"
+#     finally:
+#         cursor.close()
+#         db.close()
+#     
+#     return jsonify({"message": message})
 @app.route("/add_teacher", methods=["POST"])
 def add_teacher():
     data = request.json
+
+    # ✅ BACKEND SAFETY CHECK
+    if not data.get("name") or not data.get("department") or not data.get("teacher_id") or not data.get("password"):
+        return jsonify({
+            "status": "fail",
+            "message": "Fill all the fields"
+        })
+
     db = get_db_connection()
     cursor = db.cursor()
-    
+
     try:
         cursor.execute(
             "INSERT INTO teachers (name, department, teacher_id, password) VALUES (%s,%s,%s,%s)",
             (data["name"], data["department"], data["teacher_id"], data["password"])
         )
         db.commit()
-        message = "Teacher added successfully"
+        return jsonify({
+            "status": "success",
+            "message": "Teacher added successfully"
+        })
+
     except mysql.connector.IntegrityError:
-        message = "Teacher ID already exists"
+        return jsonify({
+            "status": "fail",
+            "message": "Teacher ID already exists"
+        })
+
     finally:
         cursor.close()
         db.close()
-    
-    return jsonify({"message": message})
+
 
 @app.route("/get_teachers")
 def get_teachers():
@@ -92,6 +127,29 @@ def delete_teacher():
     cursor.close()
     db.close()
     return jsonify({"message": "Teacher deleted successfully"})
+
+@app.route("/update_teacher", methods=["POST"])
+def update_teacher():
+    data = request.json
+
+    db = get_db_connection()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        UPDATE teachers
+        SET name=%s, department=%s
+        WHERE teacher_id=%s
+    """, (
+        data["name"],
+        data["department"],
+        data["teacher_id"]
+    ))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"message": "Teacher updated successfully"})
 
 # ---------- SUBJECT ASSIGNMENT ----------
 
@@ -153,26 +211,71 @@ def assign_subject():
 
 # ---------- STUDENT MANAGEMENT ----------
 
+# @app.route("/add_student", methods=["POST"])
+# def add_student():
+#     data = request.json
+#     db = get_db_connection()
+#     cursor = db.cursor()
+    
+#     try:
+#         cursor.execute(
+#             "INSERT INTO students (name,department, year, roll_no, password) VALUES (%s,%s,%s,%s,%s)",
+#             (data["name"],data["department"], data["year"], data["roll_no"], data["password"])
+#         )
+#         db.commit()
+#         message = "Student added successfully"
+#     except mysql.connector.IntegrityError:
+#         message = "Roll number already exists"
+#     finally:
+#         cursor.close()
+#         db.close()
+    
+#     return jsonify({"message": message})
 @app.route("/add_student", methods=["POST"])
 def add_student():
     data = request.json
+
+    # ✅ BACKEND VALIDATION
+    if (not data.get("name") or not data.get("department")
+        or not data.get("year") or not data.get("roll_no")
+        or not data.get("password")):
+
+        return jsonify({
+            "status": "fail",
+            "message": "Fill all the fields"
+        })
+
     db = get_db_connection()
     cursor = db.cursor()
-    
+
     try:
         cursor.execute(
-            "INSERT INTO students (name,department, year, roll_no, password) VALUES (%s,%s,%s,%s,%s)",
-            (data["name"],data["department"], data["year"], data["roll_no"], data["password"])
+            "INSERT INTO students (name, department, year, roll_no, password) VALUES (%s,%s,%s,%s,%s)",
+            (
+                data["name"],
+                data["department"],
+                data["year"],
+                data["roll_no"],
+                data["password"]
+            )
         )
         db.commit()
-        message = "Student added successfully"
+
+        return jsonify({
+            "status": "success",
+            "message": "Student added successfully"
+        })
+
     except mysql.connector.IntegrityError:
-        message = "Roll number already exists"
+        return jsonify({
+            "status": "fail",
+            "message": "Roll number already exists"
+        })
+
     finally:
         cursor.close()
         db.close()
-    
-    return jsonify({"message": message})
+
 
 @app.route("/get_students")
 def get_students():

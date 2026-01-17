@@ -10,8 +10,8 @@ CORS(app, supports_credentials=True)
 # ---------------- MYSQL CONFIG ----------------
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = '123456'
-app.config['MYSQL_DB'] = 'attendance_db'
+app.config['MYSQL_PASSWORD'] = 'root'
+app.config['MYSQL_DB'] = 'teacher'
 
 mysql = MySQL(app)
 
