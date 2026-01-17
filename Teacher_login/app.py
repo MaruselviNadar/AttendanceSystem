@@ -308,8 +308,8 @@ def defaulter_report():
         stream = data.get("stream")
         threshold = int(data.get("threshold", 75))
 
-        from_date = data["from_date"]
-        to_date   = data["to_date"]
+        from_date = data["from_date"]+" 00:00:00"
+        to_date   = data["to_date"]+" 23:59:59"
 
         subject = data.get("subject")
         if not subject:
