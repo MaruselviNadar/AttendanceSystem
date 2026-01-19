@@ -1,19 +1,19 @@
 from flask import Flask, request, jsonify, session, render_template
 from flask_cors import CORS
-from flask_mysqldb import MySQL
-
+import mysql.connector
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 app.secret_key = "attendance_secret"
-
 CORS(app, supports_credentials=True)
 
 # ---------------- MYSQL CONFIG ----------------
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'root'
-app.config['MYSQL_DB'] = 'teacher'
-
-mysql = MySQL(app)
+def get_db_connection():
+    """Create a new MySQL connection."""
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="Sanskruti@13",
+        database="attendance_system"
+    )
 
 # ---------------- ERROR HANDLER ----------------
 @app.errorhandler(500)
@@ -39,28 +39,36 @@ def dashboard_page():
 def graph_page():
     return render_template("graph.html")
 
+
+
 # ---------------- HELPERS ----------------
+
 def login_required():
-    return 'student_id' in session
+    return 'roll_no' in session
 
 # ---------------- LOGIN ----------------
 @app.route("/api/student/login", methods=["POST"])
 def login():
     data = request.json
-    student_id = data.get("student_id")
+    roll_no = data.get("roll_no")
     password = data.get("password")
 
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
     cur.execute(
-        "SELECT * FROM students WHERE student_id=%s AND password=%s",
-        (student_id, password)
+        "SELECT * FROM students WHERE roll_no=%s AND password=%s",
+        (roll_no, password)
     )
     student = cur.fetchone()
 
     if not student:
+        cur.close()
+        conn.close()
         return jsonify({"success": False, "error": "Invalid credentials"}), 401
 
-    session['student_id'] = student_id
+    session['roll_no'] = roll_no
+    cur.close()
+    conn.close()
     return jsonify({"success": True})
 
 # ---------------- LOGOUT ----------------
@@ -72,23 +80,27 @@ def logout():
 # ---------------- STUDENT INFO ----------------
 @app.route("/api/student/info")
 def student_info():
-    if not login_required():
+    if 'roll_no' not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
     cur.execute(
-        "SELECT name, department, stream, year FROM students WHERE student_id=%s",
-        (session['student_id'],)
+        "SELECT stream, year FROM students WHERE roll_no=%s",
+        (session['roll_no'],)
     )
     data = cur.fetchone()
 
+    cur.close()
+    conn.close()
+
     return jsonify({
-        "name": data[0],
-        "department": data[1],
-        "stream": data[2],
-        "year": data[3],
-        "student_id": session['student_id']
+        "stream": data['stream'],
+        "year": data['year'],
+        "roll_no": session['roll_no']
     })
+
 
 # ---------------- SUBJECTS ----------------
 @app.route("/api/student/subjects")
@@ -96,13 +108,20 @@ def subjects():
     if not login_required():
         return jsonify({"error": "Unauthorized"}), 401
 
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT name FROM subjects")
+    conn = get_db_connection()
+    cur = conn.cursor()
+    if semester:
+            cur.execute("SELECT subject_name FROM subjects WHERE semester = %s", (semester,))
+    else:
+            cur.execute("SELECT subject_name FROM subjects")
     rows = cur.fetchall()
 
+    cur.close()
+    conn.close()
     return jsonify({
         "subjects": [{"name": r[0]} for r in rows]
     })
+
 
 # ---------------- MONTHLY ATTENDANCE ----------------
 @app.route("/api/student/attendance/monthly")
@@ -111,29 +130,33 @@ def monthly():
         return jsonify({"error": "Unauthorized"}), 401
 
     month = request.args.get("month")
+    semester = request.args.get("semester")
+    roll_no = session['roll_no']
 
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
     query = """
-    SELECT s.name,
+    SELECT s.subject_name,
            COUNT(a.id) AS total,
            SUM(a.status='Present') AS attended,
            SUM(a.status='Absent') AS absent
     FROM attendance a
-    JOIN subjects s ON a.subject_id = s.id
-    WHERE a.student_id=%s AND MONTHNAME(a.date)=%s
-    GROUP BY s.name
-    """
-    cur.execute(query, (session['student_id'], month))
+        JOIN subjects s ON a.subject_id = s.id
+        WHERE a.roll_no=%s AND LOWER(MONTHNAME(a.date))=LOWER(%s) AND a.semester=%s
+        GROUP BY s.subject_name
+        """
+    cur.execute(query, (roll_no, month, semester))
     rows = cur.fetchall()
-
+    
     result = {}
     for r in rows:
         result[r[0]] = {
-            "total": r[1],
-            "attended": r[2],
-            "absent": r[3]
-        }
-
+                "total": int(r[1]) if r[1] is not None else 0,
+                "attended": int(r[2]) if r[2] is not None else 0,
+                "absent": int(r[3]) if r[3] is not None else 0
+            }
+    cur.close()
+    conn.close()
     return jsonify({"data": result})
 
 # ---------------- SEMESTER ATTENDANCE ----------------
@@ -143,19 +166,23 @@ def semester():
         return jsonify({"error": "Unauthorized"}), 401
 
     sem = request.args.get("semester")
+    roll_no = session['roll_no']
 
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
     query = """
-    SELECT s.name,
-           ROUND(SUM(a.status='Present')/COUNT(*)*100,2)
-    FROM attendance a
-    JOIN subjects s ON a.subject_id=s.id
-    WHERE a.student_id=%s AND a.semester=%s
-    GROUP BY s.name
-    """
-    cur.execute(query, (session['student_id'], sem))
+    SELECT s.subject_name,
+               CAST(SUM(a.status='Present')/COUNT(*)*100 AS FLOAT)
+        FROM attendance a
+        JOIN subjects s ON a.subject_id=s.id
+        WHERE a.roll_no=%s AND a.semester=%s
+        GROUP BY s.subject_name
+        """
+    cur.execute(query, (session['roll_no'], sem))
     rows = cur.fetchall()
 
+    cur.close()
+    conn.close()
     return jsonify({
         "data": {r[0]: r[1] for r in rows}
     })
@@ -169,16 +196,19 @@ def defaulter():
     sem = request.args.get("semester")
     subject = request.args.get("subject")
 
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
     query = """
-    SELECT ROUND(SUM(a.status='Present')/COUNT(*)*100,2)
+    SELECT CAST(SUM(a.status='Present')/COUNT(*)*100 AS FLOAT)
     FROM attendance a
     JOIN subjects s ON a.subject_id=s.id
-    WHERE a.student_id=%s AND a.semester=%s AND s.name=%s
+    WHERE a.roll_no=%s AND a.semester=%s AND s.subject_name=%s
     """
-    cur.execute(query, (session['student_id'], sem, subject))
+    cur.execute(query, (session['roll_no'], sem, subject))
     percent = cur.fetchone()[0] or 0
 
+    cur.close()
+    conn.close()
     return jsonify({
         "attendance_percentage": percent,
         "is_defaulter": percent < 75
