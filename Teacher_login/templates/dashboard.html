@@ -561,6 +561,108 @@ else if (report === 'defaulter') {
 
 
 
+else if (report === 'overall_defaulter') {
+
+  container.innerHTML = `
+    <strong>Defaulter List: ${subject} - ${year} - ${stream}</strong>
+
+    <div class="defaulter-controls">
+      <div>
+        <label>From Date</label>
+        <input type="date" id="def-from">
+      </div>
+
+      <div>
+        <label>To Date</label>
+        <input type="date" id="def-to">
+      </div>
+
+      <button id="applyDefaulter">Apply</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Attendance %</th>
+        </tr>
+      </thead>
+      <tbody id="defaulter-body"></tbody>
+    </table>
+  `;
+
+
+  
+
+  document.getElementById("applyDefaulter").addEventListener("click", () => {
+
+    const fromDate = document.getElementById("def-from").value;
+    const toDate = document.getElementById("def-to").value;
+
+    if (!fromDate || !toDate) {
+      showDefAlert("Please select both dates");
+      return;
+    }
+    const numericYear = getNumericYear(year);  // FY -> 1, SY -> 2, TY -> 3
+
+
+    fetch("/api/Overall_defaulter_report", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    year: getNumericYear(year),  // <-- yahi important
+    stream: stream,
+    from_date: fromDate,
+    to_date: toDate,
+    threshold: 75
+  })
+})
+
+.then(async res => {
+  const text = await res.text();   // 👈 read raw response
+
+  if (!res.ok) {
+    console.error("Server error:", text);
+    return [];
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error("Invalid JSON:", text);
+    return [];
+  }
+})
+.then(data => {
+  const tbody = document.getElementById("defaulter-body");
+  tbody.innerHTML = "";
+
+  if (!Array.isArray(data) || data.length === 0) {
+    tbody.innerHTML =
+      `<tr><td colspan="2">No defaulters found</td></tr>`;
+    return;
+  }
+
+  data.forEach(d => {
+    tbody.innerHTML += `
+      <tr class="defaulter-row">
+        <td>${d.student_name}</td>
+        <td>${d.percentage}%</td>
+      </tr>
+    `;
+  });
+})
+.catch(err => {
+  console.error("Defaulter fetch failed:", err);
+});
+
+  });
+}
+
+
+
+
+
   else{
     renderAttendance();
   }

@@ -24,7 +24,7 @@ def get_db_connection(autocommit=False):
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="root",
+        password="123456",
         database="teacher",
         autocommit=autocommit,
     )
@@ -432,6 +432,65 @@ def defaulter_report():
 
         query = """
         SELECT
+        s.id AS student_id,
+        s.name AS student_name,
+        COUNT(a.status) AS total_lectures,
+        SUM(a.status = 'P') AS present_count,
+        ROUND(SUM(a.status = 'P') / COUNT(a.status) * 100, 2) AS percentage
+        FROM students s
+        JOIN attendance a ON a.student_id = s.id
+        JOIN lectures l ON l.lecture_key = a.lecture_key
+        WHERE s.year = %s
+        AND s.department = %s
+        AND l.subject = %s              -- 👈 SELECTED SUBJECT ONLY
+        AND l.lecture_date_time BETWEEN %s AND %s
+        GROUP BY s.id, s.name
+        HAVING percentage < %s
+        ORDER BY percentage;    
+        """
+
+        cursor.execute(
+            query,
+            (year, stream, subject, from_date, to_date, threshold)
+        )
+
+        result = cursor.fetchall()
+        print("DEF RESULT:", result)
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(result)
+
+    except Exception as e:
+        print("DEF ERROR:", e)
+        return jsonify({"error": str(e)}), 500
+
+
+
+#--------OverAll Defaulter--------#        
+
+@app.route("/api/Overall_defaulter_report", methods=["POST"])
+def OverAll_defaulter_report():
+    try:
+        data = request.json
+        print("DEF DATA:", data)
+
+        if not data.get("from_date") or not data.get("to_date"):
+            return jsonify({"error": "Date range required"}), 400
+
+        year = int(data.get("year"))
+        stream = data.get("stream")
+        threshold = int(data.get("threshold", 75))
+
+        from_date = data["from_date"]+" 00:00:00"
+        to_date   = data["to_date"]+" 23:59:59"
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        query = """
+        SELECT
             s.id AS student_id,
             s.name AS student_name,
             COUNT(a.status) AS total_lectures,
@@ -465,6 +524,7 @@ def defaulter_report():
     except Exception as e:
         print("DEF ERROR:", e)
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
