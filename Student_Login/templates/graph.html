@@ -5,6 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Student Attendance Portal</title>
+
   <style>
     :root {
       --sky-100: #f2f6fd;
@@ -14,7 +15,7 @@
       --text: #003366;
       --muted: #5a6b7a;
       --card-shadow: rgba(0, 0, 0, 0.12);
-      font-family: Inter, Roboto, Arial, sans-serif;
+      font-family: Arial, sans-serif;
     }
 
     * {
@@ -23,31 +24,23 @@
 
     body {
       margin: 0;
-      background: linear-gradient(180deg, #f2f6fd, #f8feff);
-      color: var(--text);
       padding: 28px;
-      background-image: url('/static/innerheadercommon.jpg');
-      background-repeat: no-repeat;
-      background-position: top center;
-      background-size: contain;
-      background-color: #f5f7f4;
+      background: #f5f7f4 url('/static/innerheadercommon.jpg') no-repeat top center / contain;
     }
 
     .app {
       max-width: 980px;
-      margin: 0 auto;
+      margin: auto;
     }
 
     .header {
-      background: var(--white);
-      padding: 20px 22px;
+      background: #fff;
+      padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 8px 20px var(--card-shadow);
+      border: 2px solid #004aad;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 16px;
-      border: 2px solid #004aad;
     }
 
     .brand {
@@ -59,589 +52,328 @@
     .logo {
       width: 48px;
       height: 48px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--sky-500), var(--sky-300));
+      background: linear-gradient(135deg, #004aad, #9ec9ff);
+      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--white);
-      font-weight: 700;
-      font-size: 18px;
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
-    }
-
-    .title {
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .subtitle {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .menu {
-      display: flex;
-      gap: 10px;
+      font-weight: bold;
+      border-radius: 10px;
     }
 
     .menu button {
       background: #004aad;
       color: #fff;
-      border: 1px solid transparent;
+      border: none;
       padding: 8px 14px;
       border-radius: 8px;
+      margin-left: 6px;
       cursor: pointer;
-      font-weight: 600;
-    }
-
-    .menu button:hover {
-      background: #003080;
     }
 
     .menu button.active {
-      background: linear-gradient(90deg, var(--sky-300), #f2f6fd);
-      color: var(--text);
-      border: 1px solid var(--sky-300);
-      box-shadow: 0 6px 12px rgba(102, 194, 255, 0.12);
+      background: #9ec9ff;
+      color: #003366;
+      font-weight: bold;
+    }
+
+    .logout-btn {
+      background: #dc3545;
     }
 
     .card {
-      background: var(--white);
       margin-top: 18px;
-      border-radius: 12px;
+      background: #fff;
       padding: 18px;
-      box-shadow: 0 8px 18px var(--card-shadow);
+      border-radius: 12px;
       border: 2px solid #004aad;
     }
 
     .controls {
       display: flex;
       gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 15px;
     }
 
-    label {
-      font-size: 13px;
-      color: var(--muted);
-      display: block;
-      margin-bottom: 6px;
-    }
-
-    select,
-    .info {
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid #e6f2f9;
-      background: linear-gradient(180deg, #fff, #fbfeff);
-      min-width: 160px;
-      font-size: 14px;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
+    select {
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 6px;
-      font-size: 14px;
+      margin-top: 10px;
     }
 
     th,
     td {
-      text-align: left;
-      padding: 12px 10px;
-      border-bottom: 1px dashed #eef6fb;
+      padding: 10px;
+      border-bottom: 1px dashed #ddd;
     }
 
     th {
-      background: linear-gradient(180deg, var(--sky-100), #fff);
-      font-weight: 700;
-      color: var(--text);
+      background: #f2f6fd;
     }
 
-    .muted {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .stats {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      margin-top: 12px;
-      flex-wrap: wrap;
-    }
-
-    .stat {
-      padding: 10px 14px;
-      border-radius: 10px;
-      background: linear-gradient(180deg, #fff, #fbfeff);
-      border: 1px solid #eef8ff;
-      box-shadow: 0 6px 12px rgba(102, 194, 255, 0.06);
+    .defaulter-row {
+      background: rgba(194, 61, 61, 0.12);
     }
 
     .defaulter-yes {
       color: #c23d3d;
-      font-weight: 700;
+      font-weight: bold;
     }
 
-    .defaulter-row {
-      background-color: rgba(194, 61, 61, 0.1);
-    }
-
-    .top-college-logo {
-      position: fixed;
-      top: 15px;
-      left: 20px;
-      z-index: 9999;
-    }
-
-    .top-college-logo img {
-      height: 60px;
-      object-fit: contain;
-    }
-
-    .logout-btn {
-      background: #dc3545;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .logout-btn:hover {
-      background: #c82333;
-    }
-
-    @media (max-width:600px) {
-      .header {
-        flex-direction: column;
-        align-items: flex-start
-      }
-
-      .menu {
-        width: 100%;
-        justify-content: flex-start;
-        flex-wrap: wrap
-      }
+    .stat {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #f8fbff;
+      border: 1px solid #d6e6ff;
     }
   </style>
 </head>
 
 <body>
-  <div class="top-college-logo">
-    <img src="/static/sieslogo.jpg" alt="College Logo">
-  </div>
 
-  <div class="app" role="main">
-    <div class="header" role="banner">
+  <div class="app">
+    <div class="header">
       <div class="brand">
         <div class="logo">SA</div>
         <div>
-          <div class="title">Student Attendance Portal</div>
-          <div class="subtitle">Sky Blue • Student view</div>
+          <div><strong>Student Attendance Portal</strong></div>
+          <div style="font-size:13px;color:#5a6b7a;">Student View</div>
         </div>
       </div>
-
-      <nav class="menu" aria-label="Report type">
-        <button id="btn-month" class="active" data-type="month">Monthly Report</button>
-        <button id="btn-sem" data-type="semester">Semester Report</button>
-        <button id="btn-def" data-type="defaulter">Defaulter</button>
-        <button class="logout-btn" id="logoutBtn">Logout</button>
-      </nav>
+      <div class="menu">
+        <button data-type="month" class="active">Monthly</button>
+        <button data-type="semester">Semester</button>
+        <button data-type="defaulter">Defaulter</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
     </div>
 
-    <section class="card" aria-live="polite">
+    <div class="card">
       <div class="controls" id="controls">
-        <div>
-          <label for="student-name">Student:</label>
-          <div class="info" id="student-name" role="status">Loading student info...</div>
-        </div>
+        <strong id="student-name">Loading...</strong>
       </div>
-
       <div id="output"></div>
-    </section>
+    </div>
   </div>
 
   <script>
-    // Configuration
-    const API_BASE_URL = '/api';
+    const API = "/api";
 
-    // State management
     const state = {
-      mode: 'month',
-      month: 'January',
-      semester: 'Sem 3',
-      subject: null,
-      subjects: [],
-      studentInfo: null
+      mode: "month",
+      month: "January",
+      semester: "Sem 3",
+      subjects: []
     };
 
-    // Utility functions
-    function q(id) {
-      return document.getElementById(id);
-    }
+    function q(id) { return document.getElementById(id); }
 
-    function createOption(text, value) {
-      const o = document.createElement('option');
-      o.value = value;
-      o.textContent = text;
-      return o;
-    }
-
-    function getSemestersForMode() {
-      return ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6'];
-    }
-
-    // API calls
-    async function fetchStudentInfo() {
+    async function fetchStudent() {
       try {
-        const response = await fetch(`${API_BASE_URL}/student/info`, {
-          credentials: 'include'
-        });
-
-        if (!response.ok) {
-          window.location.href = '/';
-          return null;
+        const r = await fetch(`${API}/student/info`, { credentials: "include" });
+        if (!r.ok) {
+          console.error("Student info fetch failed:", r.status);
+          location.href = "/";
+          return;
         }
-
-        const data = await response.json();
-        state.studentInfo = data;
-        q('student-name').textContent = `${data.name} — ${data.course}`;
-        return data;
-      } catch (error) {
-        console.error('Error fetching student info:', error);
-        q('student-name').textContent = 'Error loading student info';
-        return null;
+        const d = await r.json();
+        q("student-name").textContent = `${d.name} — ${d.department}`;
+      } catch (e) {
+        console.error("Error fetching student info:", e);
+        q("student-name").textContent = "Error loading info";
       }
     }
 
-    async function fetchSubjects() {
+    async function fetchSubjects(sem) {
       try {
-        const response = await fetch(`${API_BASE_URL}/student/subjects`, {
-          credentials: 'include'
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch subjects');
-
-        const data = await response.json();
-        state.subjects = data.subjects.map(s => s.name);
-        if (state.subjects.length > 0) {
-          state.subject = state.subjects[0];
+        const r = await fetch(`${API}/student/subjects?semester=${sem}`, { credentials: "include" });
+        if (!r.ok) {
+          console.error("Subjects fetch failed:", r.status);
+          state.subjects = ["DBMS", "OS", "DSA", "Math"]; // Fallback
+          return;
         }
-      } catch (error) {
-        console.error('Error fetching subjects:', error);
-        state.subjects = ['DBMS', 'OS', 'DSA', 'Math'];
+        const d = await r.json();
+        if (d.subjects && d.subjects.length > 0) {
+          state.subjects = d.subjects.map(s => s.name);
+        } else {
+          console.warn("No subjects returned from API, using fallback");
+          state.subjects = ["DBMS", "OS", "DSA", "Math"];
+        }
+      } catch (e) {
+        console.error("Error fetching subjects:", e);
+        state.subjects = ["DBMS", "OS", "DSA", "Math"];
       }
     }
 
-    async function fetchMonthlyReport(month) {
+    async function fetchMonthly(month, sem) {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/student/attendance/monthly?month=${month}`,
-          { credentials: 'include' }
-        );
-
-        if (!response.ok) throw new Error('Failed to fetch monthly report');
-
-        const data = await response.json();
-        return data.data;
-      } catch (error) {
-        console.error('Error fetching monthly report:', error);
+        const r = await fetch(`${API}/student/attendance/monthly?month=${month}&semester=${sem}`, { credentials: "include" });
+        if (!r.ok) throw new Error("Monthly fetch failed");
+        return (await r.json()).data || {};
+      } catch (e) {
+        console.error(e);
         return {};
       }
     }
 
-    async function fetchSemesterReport(semester) {
+    async function fetchSemester(sem) {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/student/attendance/semester?semester=${semester}`,
-          { credentials: 'include' }
-        );
-
-        if (!response.ok) throw new Error('Failed to fetch semester report');
-
-        const data = await response.json();
-        return data.data;
-      } catch (error) {
-        console.error('Error fetching semester report:', error);
+        const r = await fetch(`${API}/student/attendance/semester?semester=${sem}`, { credentials: "include" });
+        if (!r.ok) throw new Error("Semester fetch failed");
+        return (await r.json()).data || {};
+      } catch (e) {
+        console.error(e);
         return {};
       }
     }
 
-    async function fetchDefaulterStatus(semester, subject) {
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/student/attendance/defaulter?semester=${semester}&subject=${subject}`,
-          { credentials: 'include' }
-        );
-
-        if (!response.ok) throw new Error('Failed to fetch defaulter status');
-
-        return await response.json();
-      } catch (error) {
-        console.error('Error fetching defaulter status:', error);
-        return null;
-      }
-    }
-
-    // Render functions
     function renderControls() {
-      const ctrl = q('controls');
-      while (ctrl.children.length > 1) {
-        ctrl.removeChild(ctrl.lastChild);
-      }
+      const c = q("controls");
+      const studentTxt = q("student-name").textContent;
+      c.innerHTML = `<strong id="student-name">${studentTxt}</strong>`;
 
-      if (state.mode === 'month') {
-        const wrapper = document.createElement('div');
-        const lbl = document.createElement('label');
-        lbl.textContent = 'Select month:';
-        const sel = document.createElement('select');
-        sel.id = 'sel-month';
-
+      if (state.mode === "month") {
+        const sel = document.createElement("select");
         ['January', 'February', 'March', 'April', 'May', 'June',
           'July', 'August', 'September', 'October', 'November', 'December']
-          .forEach(m => sel.appendChild(createOption(m, m)));
-
-        sel.value = state.month;
-        sel.addEventListener('change', e => {
-          state.month = e.target.value;
-          renderOutput();
+          .forEach(m => {
+            sel.innerHTML += `<option value="${m}" ${m === state.month ? "selected" : ""}>${m}</option>`;
+          });
+        sel.onchange = e => { state.month = e.target.value; renderOutput(); };
+        c.appendChild(sel);
+      } else {
+        const sel = document.createElement("select");
+        ["Sem 1", "Sem 2", "Sem 3", "Sem 4", "Sem 5", "Sem 6"].forEach(s => {
+          sel.innerHTML += `<option ${s === state.semester ? "selected" : ""}>${s}</option>`;
         });
-
-        wrapper.appendChild(lbl);
-        wrapper.appendChild(sel);
-        ctrl.appendChild(wrapper);
-      }
-      else if (state.mode === 'semester') {
-        const wrapper = document.createElement('div');
-        const lbl = document.createElement('label');
-        lbl.textContent = 'Select semester:';
-        const sel = document.createElement('select');
-        sel.id = 'sel-sem';
-
-        getSemestersForMode().forEach(s => sel.appendChild(createOption(s, s)));
-        sel.value = state.semester;
-        sel.addEventListener('change', e => {
-          state.semester = e.target.value;
-          renderOutput();
-        });
-
-        wrapper.appendChild(lbl);
-        wrapper.appendChild(sel);
-        ctrl.appendChild(wrapper);
-      }
-      else if (state.mode === 'defaulter') {
-        const wrap2 = document.createElement('div');
-        const lbl2 = document.createElement('label');
-        lbl2.textContent = 'Select semester:';
-        const sel2 = document.createElement('select');
-        sel2.id = 'sel-sem';
-
-        getSemestersForMode().forEach(s => sel2.appendChild(createOption(s, s)));
-        sel2.value = state.semester;
-        sel2.addEventListener('change', e => {
-          state.semester = e.target.value;
-          renderOutput();
-        });
-
-        wrap2.appendChild(lbl2);
-        wrap2.appendChild(sel2);
-        ctrl.appendChild(wrap2);
-
-        const wrap3 = document.createElement('div');
-        const lbl3 = document.createElement('label');
-        lbl3.textContent = 'Select subject:';
-        const sel3 = document.createElement('select');
-        sel3.id = 'sel-sub';
-
-        state.subjects.forEach(s => sel3.appendChild(createOption(s, s)));
-        sel3.value = state.subject;
-        sel3.addEventListener('change', e => {
-          state.subject = e.target.value;
-          renderOutput();
-        });
-
-        wrap3.appendChild(lbl3);
-        wrap3.appendChild(sel3);
-        ctrl.appendChild(wrap3);
+        sel.onchange = e => { state.semester = e.target.value; renderOutput(); };
+        c.appendChild(sel);
       }
     }
 
     async function renderOutput() {
-      const out = q('output');
-      out.innerHTML = '<div style="text-align:center;padding:20px;color:#5a6b7a;">Loading...</div>';
+      const out = q("output");
+      out.innerHTML = '<div class="stat">Loading attendance data...</div>';
 
-      if (state.mode === 'month') {
-        const data = await fetchMonthlyReport(state.month);
+      try {
+        // MONTHLY
+        if (state.mode === "month") {
+          await fetchSubjects(state.semester);
+          const d = await fetchMonthly(state.month, state.semester);
 
-        out.innerHTML = '';
-        const h = document.createElement('div');
-        h.innerHTML = `<strong class="muted">Monthly report — ${state.month}</strong>`;
-        out.appendChild(h);
-
-        const wrap = document.createElement('div');
-        wrap.className = 'table-wrap';
-        const table = document.createElement('table');
-        table.innerHTML = '<thead><tr><th>Subject</th><th>Total</th><th>Present</th><th>Absent</th></tr></thead>';
-
-        const tb = document.createElement('tbody');
-
-        state.subjects.forEach(sub => {
-          const d = data[sub] || { attended: 0, absent: 0, total: 0 }; // Default to 0 for chart safety
-          let rowClass = '';
-
-          // Data for table (keep original '-' logic if needed or cleaner)
-          const displayTotal = d.total !== 0 ? d.total : '-';
-          const displayAttended = d.attended !== 0 ? d.attended : '-';
-          const displayAbsent = d.absent !== 0 ? d.absent : '-';
-
-          if (d.attended !== 0 && d.total !== 0) {
-            const perc = (d.attended / d.total) * 100;
-            if (perc < 75) rowClass = 'defaulter-row';
+          if (!state.subjects || state.subjects.length === 0) {
+            out.innerHTML = `<div class="stat defaulter-yes">No subjects found for ${state.semester}.</div>`;
+            return;
           }
 
-          tb.insertAdjacentHTML(
-            'beforeend',
-            `<tr class="${rowClass}">
-          <td>${sub}</td>
-          <td>${displayTotal}</td>
-          <td>${displayAttended}</td>
-          <td>${displayAbsent}</td>
-        </tr>`
-          );
-        });
+          let html = `<table><tr><th>Subject</th><th>Total Class</th><th>Present</th><th>Absent</th></tr>`;
+          state.subjects.forEach(s => {
+            const x = d[s] || { total: 0, attended: 0, absent: 0 };
+            const total = x.total !== undefined ? x.total : 0;
+            const attended = x.attended !== undefined ? x.attended : 0;
+            const absent = x.absent !== undefined ? x.absent : 0;
 
-        table.appendChild(tb);
-        wrap.appendChild(table);
-        out.appendChild(wrap);
-      }
-
-      else if (state.mode === 'semester') {
-        const data = await fetchSemesterReport(state.semester);
-
-        out.innerHTML = '';
-        const h = document.createElement('div');
-        h.innerHTML = `<strong class="muted">Semester report — ${state.semester}</strong>`;
-        out.appendChild(h);
-
-        const wrap = document.createElement('div');
-        wrap.className = 'table-wrap';
-        const table = document.createElement('table');
-        table.innerHTML = '<thead><tr><th>Subject</th><th>Attendance %</th></tr></thead>';
-
-        const tb = document.createElement('tbody');
-
-        state.subjects.forEach(sub => {
-          if (data[sub]) {
-            let perc = parseInt(data[sub]);
-            const rowClass = perc < 75 ? 'defaulter-row' : '';
-
-            tb.insertAdjacentHTML(
-              'beforeend',
-              `<tr class="${rowClass}"><td>${sub}</td><td>${data[sub]}%</td></tr>`
-            );
-          }
-        });
-
-        table.appendChild(tb);
-        wrap.appendChild(table);
-        out.appendChild(wrap);
-      }
-
-      else if (state.mode === 'defaulter') {
-        const data = await fetchDefaulterStatus(state.semester, state.subject);
-
-        out.innerHTML = '';
-        const h = document.createElement('div');
-        h.innerHTML = `<strong class="muted">Defaulter — ${state.semester} / ${state.subject}</strong>`;
-        out.appendChild(h);
-
-        if (!data) {
-          out.innerHTML += '<p style="color:#c23d3d;margin-top:10px;">Error loading defaulter status</p>';
-          return;
+            html += `<tr>
+    <td>${s}</td><td>${total}</td>
+    <td>${attended}</td><td>${absent}</td>
+  </tr>`;
+          });
+          out.innerHTML = html + "</table>";
         }
 
-        const stats = document.createElement('div');
-        stats.className = 'stats';
+        // SEMESTER
+        else if (state.mode === "semester") {
+          const d = await fetchSemester(state.semester);
+          if (Object.keys(d).length === 0) {
+            out.innerHTML = `<div class="stat">No data for ${state.semester}.</div>`;
+            return;
+          }
+          let html = `<table><tr><th>Subject</th><th>%</th></tr>`;
+          for (let s in d) {
+            html += `<tr class="${d[s] < 75 ? "defaulter-row" : ""}">
+        <td>${s}</td><td>${d[s]}%</td>
+      </tr>`;
+          }
+          out.innerHTML = html + "</table>";
+        }
 
-        const p1 = document.createElement('div');
-        p1.className = 'stat';
-        p1.innerHTML = `<div class="muted">Attendance %</div><div style="font-weight:800;font-size:20px">${data.attendance_percentage}%</div>`;
-        stats.appendChild(p1);
+        // ✅ DEFAULTER (OVERALL + SUBJECTWISE TOGGLE)
+        else {
+          const d = await fetchSemester(state.semester);
+          if (Object.keys(d).length === 0) {
+            out.innerHTML = `<div class="stat">No data for ${state.semester}.</div>`;
+            return;
+          }
 
-        const isDefaulter = data.is_defaulter;
-        const p2 = document.createElement('div');
-        p2.className = 'stat';
-        p2.innerHTML = `<div class="muted">Defaulter</div><div style="font-weight:800;font-size:18px" class="${isDefaulter ? 'defaulter-yes' : ''}">${isDefaulter ? 'YES' : 'NO'}</div>`;
-        stats.appendChild(p2);
+          let total = 0, count = 0;
+          for (let s in d) { total += parseFloat(d[s]); count++; }
+          const avg = (total / count).toFixed(2);
 
-        out.appendChild(stats);
+          let html = `
+        <div class="stat">
+          <div><strong>Overall Attendance Overview</strong></div>
+          <div style="font-size:28px; margin: 10px 0;">${avg}%</div>
+          <div class="${avg < 75 ? "defaulter-yes" : ""}" style="font-size: 14px;">
+            ${avg < 75 ? "⚠️ YOU ARE IN DEFAULTER LIST" : "✅ YOUR ATTENDANCE IS CLEAR"}
+          </div>
+          <button id="toggle-details" style="margin-top:15px; background:#5a6b7a; font-size:12px;">📊 Check Subject-wise Details</button>
+        </div>
 
-        const bar = document.createElement('div');
-        bar.style.width = '100%';
-        bar.style.height = '12px';
-        bar.style.borderRadius = '6px';
-        bar.style.background = '#e0e7f5';
-        bar.style.overflow = 'hidden';
-        bar.style.marginTop = '8px';
+        <div id="subject-details" style="display:none; margin-top:20px;">
+          <h4 style="color:#003366; margin-bottom:10px;">Subject-wise Breakdown</h4>
+          <table>
+            <tr><th>Subject</th><th>%</th><th>Status</th></tr>`;
 
-        const fill = document.createElement('div');
-        fill.style.height = '100%';
-        fill.style.width = data.attendance_percentage + '%';
-        fill.style.background = data.attendance_percentage < 75 ? '#c23d3d' : '#004aad';
-        fill.style.transition = '0.4s';
+          for (let s in d) {
+            html += `<tr class="${d[s] < 75 ? "defaulter-row" : ""}">
+          <td>${s}</td><td>${d[s]}%</td>
+          <td class="${d[s] < 75 ? "defaulter-yes" : ""}">
+            ${d[s] < 75 ? "Defaulter" : "Clear"}
+          </td>
+        </tr>`;
+          }
+          html += `</table></div>`;
+          out.innerHTML = html;
 
-        bar.appendChild(fill);
-        stats.appendChild(bar);
+          q("toggle-details").onclick = () => {
+            const detailDiv = q("subject-details");
+            detailDiv.style.display = detailDiv.style.display === "none" ? "block" : "none";
+          };
+        }
+      } catch (e) {
+        console.error(e);
+        out.innerHTML = '<div class="stat defaulter-yes">An error occurred while rendering data.</div>';
       }
     }
 
-    // Event listeners
-    document.querySelectorAll('.menu button').forEach(btn => {
-      if (btn.id !== 'logoutBtn') {
-        btn.addEventListener('click', e => {
-          document.querySelectorAll('.menu button').forEach(b => {
-            if (b.id !== 'logoutBtn') b.classList.remove('active');
-          });
-          btn.classList.add('active');
-          state.mode = btn.dataset.type;
-          renderControls();
-          renderOutput();
-        });
-      }
+    document.querySelectorAll(".menu button[data-type]").forEach(b => {
+      b.onclick = () => {
+        document.querySelectorAll(".menu button").forEach(x => x.classList.remove("active"));
+        b.classList.add("active");
+        state.mode = b.dataset.type;
+        renderControls();
+        renderOutput();
+      };
     });
 
-    // Logout functionality
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      try {
-        await fetch(`${API_BASE_URL}/student/logout`, {
-          method: 'POST',
-          credentials: 'include'
-        });
-      } catch (error) {
-        console.error('Logout error:', error);
-      }
-      window.location.href = '/';
-    });
+    async function logout() {
+      await fetch(`${API}/student/logout`, { method: "POST", credentials: "include" });
+      location.href = "/";
+    }
 
-    // Initialize
-    async function init() {
-      await fetchStudentInfo();
+    (async function init() {
+      await fetchStudent();
       await fetchSubjects();
       renderControls();
       renderOutput();
-    }
-
-    init();
+    })();
   </script>
 
 </body>
