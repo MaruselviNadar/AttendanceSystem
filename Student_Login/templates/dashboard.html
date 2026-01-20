@@ -112,7 +112,7 @@
         <div id="errorMsg" style="display: none; color: #dc3545; margin-bottom: 10px; font-weight: bold;"></div>
 
         <div class="card" id="studentCard">
-            <p>📘 Department: <span id="stream">...</span></p>
+            <p>📘 Department: <span id="department">...</span></p>
             <p>🎓 Year: <span id="year">...</span></p>
             <p>🆔 Roll Number: <span id="roll_no">...</span></p>
         </div>
@@ -146,7 +146,7 @@
                 const data = await response.json();
 
                 document.getElementById('welcomeText').textContent = `Welcome`;
-                document.getElementById('stream').textContent = data.stream;
+                document.getElementById('department').textContent = data.department;
                 document.getElementById('year').textContent = data.year;
                 document.getElementById('roll_no').textContent = data.roll_no;
             } catch (error) {
