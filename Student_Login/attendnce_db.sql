@@ -2,20 +2,16 @@ USE attendance_system;
 CREATE TABLE students (
     id INT AUTO_INCREMENT PRIMARY KEY,
     roll_no VARCHAR(50) UNIQUE NOT NULL,
-    stream VARCHAR(50) NOT NULL,
+    department VARCHAR(50) NOT NULL,
     year VARCHAR(50) NOT NULL,
     password VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- --------------------------------------------------------
--- Subjects
--- --------------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS subjects (
     id INT NOT NULL AUTO_INCREMENT,
     subject_name VARCHAR(100) NOT NULL,
-    stream VARCHAR(50) NOT NULL,
+    department VARCHAR(50) NOT NULL,
     year VARCHAR(50) NOT NULL,
     semester VARCHAR(20) NOT NULL,
     PRIMARY KEY (id)
@@ -35,14 +31,20 @@ CREATE TABLE attendance (
     FOREIGN KEY (roll_no) REFERENCES students(roll_no),
     FOREIGN KEY (subject_id) REFERENCES subjects(id)
 );
+CREATE TABLE IF NOT EXISTS admins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 
 -- Students
-INSERT INTO students (roll_no, stream, year, password) VALUES 
+INSERT INTO students (roll_no, department, year, password) VALUES 
 ('1', 'CS', 'TY', '1234');
 
 -- Subjects (Changed to Sem 3 to match user preference)
-INSERT INTO subjects (subject_name, stream, year, semester) VALUES 
+INSERT INTO subjects (subject_name, department, year, semester) VALUES 
 ('DBMS', 'CS', 'TY', 'Sem 3'),
 ('OS', 'CS', 'TY', 'Sem 3'),
 ('DSA', 'CS', 'TY', 'Sem 3'),
