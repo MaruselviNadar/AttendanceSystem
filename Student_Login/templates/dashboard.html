@@ -26,6 +26,26 @@
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.15);
             border: 2px solid #004aad;
             text-align: center;
+            position: relative;
+            /* 🔑 required for inside positioning */
+        }
+
+        /* 🔴 LOGOUT BUTTON (TOP RIGHT INSIDE BORDER) */
+        .logout-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
         }
 
         .logo {
@@ -72,60 +92,97 @@
         .btn:hover {
             background: #003080;
         }
-
-        .logout {
-            margin-top: 15px;
-            display: block;
-            color: #dc3545;
-            text-decoration: none;
-            font-weight: 600;
-        }
     </style>
 </head>
 
 <body>
 
     <div class="container">
+
+        <!-- ✅ LOGOUT -->
+        <a href="#" id="logoutBtn" class="logout-btn">Logout</a>
+
         <img src="/static/sieslogo.jpg" alt="College Logo" class="logo">
 
-        <h2>Welcome, Student</h2>
+        <h2 id="welcomeText">Welcome, Student</h2>
         <div class="subtitle">Student Dashboard</div>
 
-        <div class="card">
-            <p>Stream: <span id="stream">Loading...</span></p>
-            <p>Year: <span id="year">Loading...</span></p>
-            <p>Student ID: <span id="studentId">Loading...</span></p>
+        <div id="loading" style="display: none; color: #004aad; margin-bottom: 10px; font-weight: bold;">Loading
+            profile...</div>
+        <div id="errorMsg" style="display: none; color: #dc3545; margin-bottom: 10px; font-weight: bold;"></div>
+
+        <div class="card" id="studentCard">
+            <p>📘 Department: <span id="department">...</span></p>
+            <p>🎓 Year: <span id="year">...</span></p>
+            <p>🆔 Roll Number: <span id="roll_no">...</span></p>
         </div>
 
         <a href="/graph" class="btn">View Attendance</a>
 
-        <a href="/" class="logout">Logout</a>
     </div>
 
     <script>
-        fetch('/api/student/info')
-            .then(response => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loading = document.getElementById('loading');
+            const errorMsg = document.getElementById('errorMsg');
+            const studentCard = document.getElementById('studentCard');
+
+            try {
+                loading.style.display = 'block';
+                studentCard.style.opacity = '0.5';
+
+                const response = await fetch('/api/student/info');
+                loading.style.display = 'none';
+                studentCard.style.opacity = '1';
+
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    if (response.status === 401) {
+                        window.location.href = '/';
+                    } else {
+                        throw new Error('Failed to fetch student info');
+                    }
+                    return;
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.error) {
-                    // Not logged in
+                const data = await response.json();
+
+                document.getElementById('welcomeText').textContent = `Welcome`;
+                document.getElementById('department').textContent = data.department;
+                document.getElementById('year').textContent = data.year;
+                document.getElementById('roll_no').textContent = data.roll_no;
+            } catch (error) {
+                console.error('Error fetching student info:', error);
+                loading.style.display = 'none';
+                errorMsg.textContent = 'Error loading profile. Redirecting...';
+                errorMsg.style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const logoutBtn = e.target;
+            const originalText = logoutBtn.textContent;
+            logoutBtn.textContent = 'Logging out...';
+            logoutBtn.style.pointerEvents = 'none';
+
+            try {
+                const response = await fetch('/api/student/logout', {
+                    method: 'POST'
+                });
+                if (response.ok) {
                     window.location.href = '/';
                 } else {
-                    document.getElementById('stream').textContent = data.stream;
-                    document.getElementById('year').textContent = data.year;
-                    document.getElementById('studentId').textContent = data.student_id;
+                    logoutBtn.textContent = originalText;
+                    logoutBtn.style.pointerEvents = 'auto';
+                    alert('Logout failed. Please try again.');
                 }
-            })
-            .catch(error => {
-                console.error('Error fetching student info:', error);
-                document.getElementById('stream').textContent = "Error";
-                document.getElementById('year').textContent = "Error";
-                document.getElementById('studentId').textContent = "Error";
-            });
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = '/';
+            }
+        });
     </script>
 
 </body>

@@ -1,64 +1,56 @@
-CREATE DATABASE IF NOT EXISTS attendance_db;
-USE attendance_db;
-
--- --------------------------------------------------------
--- Users/Students
--- --------------------------------------------------------
-DROP TABLE IF EXISTS students;
-CREATE TABLE students (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id VARCHAR(20) UNIQUE NOT NULL,
-    name VARCHAR(100),
-    department VARCHAR(50),
-    year VARCHAR(5),
-    roll_no VARCHAR(50) UNIQUE NOT NULL,
-    stream VARCHAR(10),
-    password VARCHAR(100)
-);
+USE attendance_system;
+CREATE TABLE `students` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `department` varchar(50) NOT NULL,
+  `year` int NOT NULL,
+  `roll_no` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `roll_no` (`roll_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 -- Subjects
 -- --------------------------------------------------------
-DROP TABLE IF EXISTS subjects;
-CREATE TABLE subjects (
-    id INT NOT NULL AUTO_INCREMENT,
-    subject_name VARCHAR(100) NOT NULL,
-    stream VARCHAR(50) NOT NULL,
-    year VARCHAR(5) NOT NULL,
-    semester VARCHAR(20) NOT NULL,
+CREATE TABLE IF NOT EXISTS `subjects` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `subject_name` VARCHAR(100) NOT NULL,
+    `department` VARCHAR(50) NOT NULL,
+    `year` INT NOT NULL,
+    `semester` VARCHAR(20) NOT NULL,
     PRIMARY KEY (id)
 );
 
 -- --------------------------------------------------------
 -- Attendance
 -- --------------------------------------------------------
-DROP TABLE IF EXISTS attendance;
-CREATE TABLE attendance (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id VARCHAR(20),
-    subject_id INT,
-    status ENUM('Present', 'Absent'),
-    date DATE,
-    semester VARCHAR(20),
-    FOREIGN KEY (student_id) REFERENCES students(student_id),
+
+CREATE TABLE `attendance` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `roll_no` VARCHAR(50) NOT NULL,
+    `subject_id` INT NOT NULL,
+    `status` ENUM('Present','Absent') NOT NULL,
+    `date` DATE NOT NULL,
+    `semester` VARCHAR(20) NOT NULL,
+    FOREIGN KEY (roll_no) REFERENCES students(roll_no),
     FOREIGN KEY (subject_id) REFERENCES subjects(id)
 );
 
--- --------------------------------------------------------
--- Seed Data
--- --------------------------------------------------------
 
 -- Students
-INSERT INTO students (student_id, name, department, year, roll_no, stream, password) VALUES 
-('1', 'Nidhi', 'CS', 'TY', '101', 'CS', '1234');
+INSERT INTO `students` (`name`, `department`, `year`, `roll_no`, `password`) VALUES 
+('Mani, 'CS', 3, '1', '1234');
+-- Subjects (Changed to Sem 3 to match user preference)
+INSERT INTO `subjects` (`subject_name`, `department`, `year`, `semester`) VALUES 
+('DBMS', 'CS', 3, 'Sem 3'),
+('OS', 'CS', 3, 'Sem 3'),
+('DSA', 'CS', 3, 'Sem 3'),
+('Math', 'CS', 3, 'Sem 3');
 
--- Subjects
-INSERT INTO subjects (name) VALUES 
-('DBMS'), ('OS'), ('DSA'), ('Math');
-
--- Sample Attendance for student '1'
--- Assume IDs 1,2,3,4 for subjects
-INSERT INTO attendance (student_id, subject_id, status, date, semester) VALUES 
+-- Sample Attendance for student '1' (Changed to Sem 3)
+INSERT INTO `attendance` (`roll_no`, `subject_id`, `status`, `date`, `semester`) VALUES 
 ('1', 1, 'Present', '2023-01-01', 'Sem 3'),
 ('1', 1, 'Present', '2023-01-02', 'Sem 3'),
 ('1', 2, 'Absent', '2023-01-03', 'Sem 3'),

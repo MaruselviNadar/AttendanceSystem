@@ -173,12 +173,12 @@
     <h2>Student Portal</h2>
 
     <form id="loginForm">
-      <label>Student ID:</label>
-      <input type="text" id="studentId" placeholder="Enter Student ID" required>
+      <label>Roll Number:</label>
+      <input type="text" id="roll_no" placeholder="Enter Roll Number" required>
 
-      <label>Stream:</label>
-      <select id="stream" required>
-        <option value="">Select Stream</option>
+      <label>Department:</label>
+      <select id="department" required>
+        <option value="">Select department</option>
         <option value="CS">CS</option>
         <option value="IT">IT</option>
       </select>
@@ -213,13 +213,13 @@
       e.preventDefault();
 
       // Get form values
-      const studentId = document.getElementById('studentId').value;
-      const stream = document.getElementById('stream').value;
+      const roll_no = document.getElementById('roll_no').value;
+      const department= document.getElementById('department').value;
       const year = document.getElementById('year').value;
       const password = document.getElementById('password').value;
 
       // Validate inputs
-      if (!studentId || !stream || !year || !password) {
+      if (!roll_no || !department || !year || !password) {
         showError('Please fill in all fields');
         return;
       }
@@ -231,15 +231,15 @@
       errorMessage.style.display = 'none';
 
       try {
-        const response = await fetch(`${API_BASE_URL}/student/login`, {
+        const response = await fetch(`/api/student/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           credentials: 'include',
           body: JSON.stringify({
-            student_id: studentId,
-            stream: stream,
+            roll_no: roll_no,
+            department: department,
             year: year,
             password: password
           })
