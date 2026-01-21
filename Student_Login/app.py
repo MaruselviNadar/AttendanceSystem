@@ -7,12 +7,14 @@ CORS(app, supports_credentials=True)
 
 # ---------------- MYSQL CONFIG ----------------
 def get_db_connection():
+
     """Create a new MySQL connection."""
     return mysql.connector.connect(
         host="localhost",
         user="root",
         password="Sanskruti@13",
-        database="attendance_system"
+        database="attendance_system",
+       
     )
 
 # ---------------- ERROR HANDLER ----------------
@@ -52,7 +54,7 @@ def login():
     data = request.json
     roll_no = data.get("roll_no")
     password = data.get("password")
-
+   
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
@@ -60,16 +62,17 @@ def login():
         (roll_no, password)
     )
     student = cur.fetchone()
-
+    cur.close()
+    conn.close()
     if not student:
-        cur.close()
-        conn.close()
+        
         return jsonify({"success": False, "error": "Invalid credentials"}), 401
 
     session['roll_no'] = roll_no
     cur.close()
     conn.close()
     return jsonify({"success": True})
+
 
 # ---------------- LOGOUT ----------------
 @app.route("/api/student/logout", methods=["POST"])
@@ -82,21 +85,19 @@ def logout():
 def student_info():
     if 'roll_no' not in session:
         return jsonify({"error": "Unauthorized"}), 401
-
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
-
     cur.execute(
-        "SELECT stream, year FROM students WHERE roll_no=%s",
+        "SELECT name, department, year FROM students WHERE roll_no=%s",
         (session['roll_no'],)
     )
     data = cur.fetchone()
-
     cur.close()
     conn.close()
-
+   
     return jsonify({
-        "stream": data['stream'],
+        "name": data['name'],
+        "department": data['department'],
         "year": data['year'],
         "roll_no": session['roll_no']
     })
