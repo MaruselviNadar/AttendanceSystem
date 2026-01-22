@@ -71,6 +71,17 @@ body{margin:0; background: linear-gradient(180deg,var(--sky-100),#f8feff); color
   font-weight:600;
 }
 
+/*Overall Highlight*/
+.overall-row{
+  background:linear-gradient(135deg,var(--sky-500),var(--sky-300));
+}
+
+.overall-row td{
+  color: #0b3a57;
+  font-weight:600;
+}
+
+
 
 .logo {width:48px; height:48px; border-radius:10px; background:linear-gradient(135deg,var(--sky-500),var(--sky-300)); display:flex; align-items:center; justify-content:center; color:var(--white); font-weight:700; font-size:18px; box-shadow: 0 6px 14px rgba(0,0,0,0.06);}
 .title {font-size:18px; font-weight:700;}
@@ -564,7 +575,7 @@ else if (report === 'defaulter') {
 else if (report === 'overall_defaulter') {
 
   container.innerHTML = `
-    <strong>Defaulter List: ${subject} - ${year} - ${stream}</strong>
+    <strong>Overall Defaulter List: ${year} - ${stream} </strong>
 
     <div class="defaulter-controls">
       <div>
@@ -659,6 +670,103 @@ else if (report === 'overall_defaulter') {
   });
 }
 
+else if (report === 'overall_report') {
+
+  container.innerHTML = `
+    <strong>OverAll Report: ${year} - ${stream}</strong>
+
+    <div class="defaulter-controls">
+      <div>
+        <label>From Date</label>
+        <input type="date" id="def-from">
+      </div>
+
+      <div>
+        <label>To Date</label>
+        <input type="date" id="def-to">
+      </div>
+
+      <button id="apply">Apply</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Attendance %</th>
+        </tr>
+      </thead>
+      <tbody id="defaulter-body"></tbody>
+    </table>
+  `;
+
+
+  
+
+  document.getElementById("apply").addEventListener("click", () => {
+
+    const fromDate = document.getElementById("def-from").value;
+    const toDate = document.getElementById("def-to").value;
+
+    if (!fromDate || !toDate) {
+      showDefAlert("Please select both dates");
+      return;
+    }
+    const numericYear = getNumericYear(year);  // FY -> 1, SY -> 2, TY -> 3
+
+
+    fetch("/api/Overall_report", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    year: getNumericYear(year),  // <-- yahi important
+    stream: stream,
+    from_date: fromDate,
+    to_date: toDate,
+    
+  })
+})
+
+.then(async res => {
+  const text = await res.text();   // 👈 read raw response
+
+  if (!res.ok) {
+    console.error("Server error:", text);
+    return [];
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error("Invalid JSON:", text);
+    return [];
+  }
+})
+.then(data => {
+  const tbody = document.getElementById("defaulter-body");
+  tbody.innerHTML = "";
+
+  if (!Array.isArray(data) || data.length === 0) {
+    tbody.innerHTML =
+      `<tr><td colspan="2">No defaulters found</td></tr>`;
+    return;
+  }
+
+  data.forEach(d => {
+    tbody.innerHTML += `
+      <tr class="overall-row">
+        <td>${d.student_name}</td>
+        <td>${d.percentage}%</td>
+      </tr>
+    `;
+  });
+})
+.catch(err => {
+  console.error("Defaulter fetch failed:", err);
+});
+
+  });
+}
 
 
 
