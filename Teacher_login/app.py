@@ -8,6 +8,13 @@ from flask import (
     flash,
     jsonify,
 )
+
+from flask import send_file, request, jsonify
+from openpyxl import Workbook
+import mysql.connector
+import datetime
+import os
+
 from flask_cors import CORS
 import mysql.connector
 
@@ -442,7 +449,7 @@ def defaulter_report():
         JOIN lectures l ON l.lecture_key = a.lecture_key
         WHERE s.year = %s
         AND s.department = %s
-        AND l.subject = %s              -- 👈 SELECTED SUBJECT ONLY
+        AND l.subject = %s             
         AND l.lecture_date_time BETWEEN %s AND %s
         GROUP BY s.id, s.name
         HAVING percentage < %s
@@ -525,6 +532,99 @@ def OverAll_defaulter_report():
         print("DEF ERROR:", e)
         return jsonify({"error": str(e)}), 500
 
+
+#---Overall Defaulter Excel Genrator---
+
+@app.route("/api/export_overall_defaulter", methods=["POST"])
+def export_overall_defaulter():
+
+    data = request.json
+    year = data["year"]
+    stream = data["stream"]
+    from_date = data["from_date"] + " 00:00:00"
+    to_date   = data["to_date"] + " 23:59:59"
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    #Get all subjects
+    cursor.execute("""
+        SELECT DISTINCT SUBSTRING_INDEX(a.lecture_key,'_TY_',1) AS subject
+        FROM attendance a
+        JOIN students s ON s.id=a.student_id
+        WHERE s.year=%s AND s.department=%s
+    """, (year,stream))
+
+    subjects = [r["subject"] for r in cursor.fetchall()]
+
+    #Get attendance data
+    cursor.execute("""
+        SELECT 
+            s.name,
+            s.roll_no,
+            SUBSTRING_INDEX(a.lecture_key,'_TY_',1) AS subject,
+            COUNT(*) AS total,
+            SUM(a.status='P') AS present
+        FROM students s
+        JOIN attendance a ON s.id=a.student_id
+        WHERE s.year=%s AND s.department=%s
+          AND STR_TO_DATE(SUBSTRING_INDEX(a.lecture_key,'_',-1),'%Y-%m-%dT%H:%i')
+              BETWEEN %s AND %s
+        GROUP BY s.id, subject
+    """, (year,stream,from_date,to_date))
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    students = {}
+
+    for r in rows:
+        key = r["roll_no"]
+
+        if key not in students:
+            students[key] = {
+                "name": r["name"],
+                "roll": r["roll_no"],
+                "subjects": {s:0 for s in subjects},
+                "total_present":0,
+                "total_lectures":0
+            }
+
+        students[key]["subjects"][r["subject"]] = r["present"]
+        students[key]["total_present"] += r["present"]
+        students[key]["total_lectures"] += r["total"]
+
+    #Create Excel
+    wb = Workbook()
+    ws = wb.active
+
+    header = ["Student Name","Roll No"] + subjects + ["Grand Total","Grand %"]
+    ws.append(header)
+
+    for s in students.values():
+        if s["total_lectures"] == 0:
+            continue
+
+        percent = round(s["total_present"]/s["total_lectures"]*100,2)
+
+        if percent < 75:   # only defaulters
+            row = [s["name"], s["roll"]]
+            for sub in subjects:
+                row.append(s["subjects"][sub])
+            row.append(s["total_present"])
+            row.append(percent)
+            ws.append(row)
+
+    filename = "Overall_Defaulters.xlsx"
+    wb.save(filename)
+
+    return send_file(filename, as_attachment=True)
+
+
+#---Overall Report----
+
 @app.route("/api/Overall_report", methods=["POST"])
 def OverAll_report():
     try:
@@ -577,6 +677,95 @@ def OverAll_report():
     except Exception as e:
         print("DEF ERROR:", e)
         return jsonify({"error": str(e)}), 500
+
+#---Overall Report Excel---
+
+@app.route("/api/export_overall_report", methods=["POST"])
+def export_overall_report():
+
+    data = request.json
+    year = data["year"]
+    stream = data["stream"]
+    from_date = data["from_date"] + " 00:00:00"
+    to_date   = data["to_date"] + " 23:59:59"
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    #Get all subjects
+    cursor.execute("""
+        SELECT DISTINCT SUBSTRING_INDEX(a.lecture_key,'_TY_',1) AS subject
+        FROM attendance a
+        JOIN students s ON s.id=a.student_id
+        WHERE s.year=%s AND s.department=%s
+    """, (year,stream))
+
+    subjects = [r["subject"] for r in cursor.fetchall()]
+
+    #Get attendance data
+    cursor.execute("""
+        SELECT 
+            s.name,
+            s.roll_no,
+            SUBSTRING_INDEX(a.lecture_key,'_TY_',1) AS subject,
+            COUNT(*) AS total,
+            SUM(a.status='P') AS present
+        FROM students s
+        JOIN attendance a ON s.id=a.student_id
+        WHERE s.year=%s AND s.department=%s
+          AND STR_TO_DATE(SUBSTRING_INDEX(a.lecture_key,'_',-1),'%Y-%m-%dT%H:%i')
+              BETWEEN %s AND %s
+        GROUP BY s.id, subject
+    """, (year,stream,from_date,to_date))
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    students = {}
+
+    for r in rows:
+        key = r["roll_no"]
+
+        if key not in students:
+            students[key] = {
+                "name": r["name"],
+                "roll": r["roll_no"],
+                "subjects": {s:0 for s in subjects},
+                "total_present":0,
+                "total_lectures":0
+            }
+
+        students[key]["subjects"][r["subject"]] = r["present"]
+        students[key]["total_present"] += r["present"]
+        students[key]["total_lectures"] += r["total"]
+
+    #Create Excel
+    wb = Workbook()
+    ws = wb.active
+
+    header = ["Student Name","Roll No"] + subjects + ["Grand Total","Grand %"]
+    ws.append(header)
+
+    for s in students.values():
+        if s["total_lectures"] == 0:
+            continue
+
+        percent = round(s["total_present"]/s["total_lectures"]*100,2)
+        row = [s["name"], s["roll"]]
+        for sub in subjects:
+            row.append(s["subjects"][sub])
+        row.append(s["total_present"])
+        row.append(percent)
+        ws.append(row)
+
+    filename = "Overall_Defaulters.xlsx"
+    wb.save(filename)
+
+    return send_file(filename, as_attachment=True)
+
+
 
 
 if __name__ == "__main__":

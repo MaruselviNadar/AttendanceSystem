@@ -520,7 +520,7 @@ else if (report === 'defaulter') {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    year: getNumericYear(year),  // <-- yahi important
+    year: getNumericYear(year),  
     stream: stream,
     subject: subject,
     from_date: fromDate,
@@ -530,7 +530,7 @@ else if (report === 'defaulter') {
 })
 
 .then(async res => {
-  const text = await res.text();   // 👈 read raw response
+  const text = await res.text(); 
 
   if (!res.ok) {
     console.error("Server error:", text);
@@ -589,6 +589,9 @@ else if (report === 'overall_defaulter') {
       </div>
 
       <button id="applyDefaulter">Apply</button>
+
+      <button id="exportExcel">Generate Excel</button>
+
     </div>
 
     <table>
@@ -621,7 +624,7 @@ else if (report === 'overall_defaulter') {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    year: getNumericYear(year),  // <-- yahi important
+    year: getNumericYear(year),  
     stream: stream,
     from_date: fromDate,
     to_date: toDate,
@@ -630,7 +633,7 @@ else if (report === 'overall_defaulter') {
 })
 
 .then(async res => {
-  const text = await res.text();   // 👈 read raw response
+  const text = await res.text();  
 
   if (!res.ok) {
     console.error("Server error:", text);
@@ -668,6 +671,40 @@ else if (report === 'overall_defaulter') {
 });
 
   });
+
+  //overall defaulter excel
+  document.getElementById("exportExcel").onclick = ()=>{
+  
+  const fromDate = document.getElementById("def-from").value;
+  const toDate   = document.getElementById("def-to").value;
+
+  if(!fromDate || !toDate){
+    showDefAlert("Please select both dates");
+    return;
+  }
+
+  fetch("/api/export_overall_defaulter",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      year:getNumericYear(year),
+      stream:stream,
+      from_date:fromDate,
+      to_date:toDate,
+      threshold:75
+    })
+  })
+  .then(res => res.blob())
+  .then(blob=>{
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Overall_Defaulters.xlsx";
+    a.click();
+  });
+};
+
+
 }
 
 else if (report === 'overall_report') {
@@ -687,6 +724,8 @@ else if (report === 'overall_report') {
       </div>
 
       <button id="apply">Apply</button>
+      <button id="exportExcel">Generate Excel</button>
+
     </div>
 
     <table>
@@ -719,7 +758,7 @@ else if (report === 'overall_report') {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    year: getNumericYear(year),  // <-- yahi important
+    year: getNumericYear(year),  
     stream: stream,
     from_date: fromDate,
     to_date: toDate,
@@ -728,7 +767,7 @@ else if (report === 'overall_report') {
 })
 
 .then(async res => {
-  const text = await res.text();   // 👈 read raw response
+  const text = await res.text();   
 
   if (!res.ok) {
     console.error("Server error:", text);
@@ -762,10 +801,41 @@ else if (report === 'overall_report') {
   });
 })
 .catch(err => {
-  console.error("Defaulter fetch failed:", err);
+  console.error("fetch failed:", err);
 });
 
   });
+document.getElementById("exportExcel").onclick = ()=>{
+  
+  const fromDate = document.getElementById("def-from").value;
+  const toDate   = document.getElementById("def-to").value;
+
+  if(!fromDate || !toDate){
+    showDefAlert("Please select both dates");
+    return;
+  }
+
+  fetch("/api/export_overall_report",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      year:getNumericYear(year),
+      stream:stream,
+      from_date:fromDate,
+      to_date:toDate,
+      
+    })
+  })
+  .then(res => res.blob())
+  .then(blob=>{
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Overall_Report.xlsx";
+    a.click();
+  });
+};
+
 }
 
 
