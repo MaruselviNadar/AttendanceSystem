@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Attendance Portal</title>
+
+  <style>
+    :root {
+      --sky-100: #f2f6fd;
+      --sky-300: #9ec9ff;
+      --sky-500: #004aad;
+      --white: #ffffff;
+      --text: #003366;
+      --muted: #5a6b7a;
+      --card-shadow: rgba(0, 0, 0, 0.12);
+      font-family: Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      padding: 28px;
+      background: #f5f7f4 url('/static/innerheadercommon.jpg') no-repeat top center / contain;
+    }
+
+    .app {
+      max-width: 980px;
+      margin: auto;
+    }
+
+    .header {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      border: 2px solid #004aad;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #004aad, #9ec9ff);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      border-radius: 10px;
+    }
+
+    .menu button {
+      background: #004aad;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      margin-left: 6px;
+      cursor: pointer;
+    }
+
+    .menu button.active {
+      background: #9ec9ff;
+      color: #003366;
+      font-weight: bold;
+    }
+
+    .logout-btn {
+      background: #dc3545;
+    }
+
+    .card {
+      margin-top: 18px;
+      background: #fff;
+      padding: 18px;
+      border-radius: 12px;
+      border: 2px solid #004aad;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    select {
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      border-bottom: 1px dashed #ddd;
+    }
+
+    th {
+      background: #f2f6fd;
+    }
+
+    .defaulter-row {
+      background: rgba(194, 61, 61, 0.12);
+    }
+
+    .defaulter-yes {
+      color: #c23d3d;
+      font-weight: bold;
+    }
+
+    .stat {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #f8fbff;
+      border: 1px solid #d6e6ff;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">SA</div>
+        <div>
+          <div><strong>Student Attendance Portal</strong></div>
+          <div style="font-size:13px;color:#5a6b7a;">Student View</div>
+        </div>
+      </div>
+      <div class="menu">
+        <button data-type="month" class="active">Monthly</button>
+        <button data-type="semester">Semester</button>
+        <button data-type="defaulter">Defaulter</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="controls" id="controls">
+        <strong id="student-name">Loading...</strong>
+      </div>
+      <div id="output"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = "/api";
+
+    const state = {
+      mode: "month",
+      month: "January",
+      semester: "Sem 3",
+      subjects: []
+    };
+
+    function q(id) { return document.getElementById(id); }
+
+    async function fetchStudent() {
+      try {
+        const r = await fetch(`${API}/student/info`, { credentials: "include" });
+        if (!r.ok) {
+          console.error("Student info fetch failed:", r.status);
+          location.href = "/";
+          return;
+        }
+        const d = await r.json();
+        q("student-name").textContent = `${d.name} — ${d.department}`;
+      } catch (e) {
+        console.error("Error fetching student info:", e);
+        q("student-name").textContent = "Error loading info";
+      }
+    }
+
+    async function fetchSubjects(sem) {
+      try {
+        const r = await fetch(`${API}/student/subjects?semester=${sem}`, { credentials: "include" });
+        if (!r.ok) {
+          console.error("Subjects fetch failed:", r.status);
+          state.subjects = ["DBMS", "OS", "DSA", "Math"]; // Fallback
+          return;
+        }
+        const d = await r.json();
+        if (d.subjects && d.subjects.length > 0) {
+          state.subjects = d.subjects.map(s => s.name);
+        } else {
+          console.warn("No subjects returned from API, using fallback");
+          state.subjects = ["DBMS", "OS", "DSA", "Math"];
+        }
+      } catch (e) {
+        console.error("Error fetching subjects:", e);
+        state.subjects = ["DBMS", "OS", "DSA", "Math"];
+      }
+    }
+
+    async function fetchMonthly(month, sem) {
+      try {
+        const r = await fetch(`${API}/student/attendance/monthly?month=${month}&semester=${sem}`, { credentials: "include" });
+        if (!r.ok) throw new Error("Monthly fetch failed");
+        return (await r.json()).data || {};
+      } catch (e) {
+        console.error(e);
+        return {};
+      }
+    }
+
+    async function fetchSemester(sem) {
+      try {
+        const r = await fetch(`${API}/student/attendance/semester?semester=${sem}`, { credentials: "include" });
+        if (!r.ok) throw new Error("Semester fetch failed");
+        return (await r.json()).data || {};
+      } catch (e) {
+        console.error(e);
+        return {};
+      }
+    }
+
+    function renderControls() {
+      const c = q("controls");
+      const studentTxt = q("student-name").textContent;
+      c.innerHTML = `<strong id="student-name">${studentTxt}</strong>`;
+
+      if (state.mode === "month") {
+        const sel = document.createElement("select");
+        ['January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December']
+          .forEach(m => {
+            sel.innerHTML += `<option value="${m}" ${m === state.month ? "selected" : ""}>${m}</option>`;
+          });
+        sel.onchange = e => { state.month = e.target.value; renderOutput(); };
+        c.appendChild(sel);
+      } else {
+        const sel = document.createElement("select");
+        ["Sem 1", "Sem 2", "Sem 3", "Sem 4", "Sem 5", "Sem 6"].forEach(s => {
+          sel.innerHTML += `<option ${s === state.semester ? "selected" : ""}>${s}</option>`;
+        });
+        sel.onchange = e => { state.semester = e.target.value; renderOutput(); };
+        c.appendChild(sel);
+      }
+    }
+
+    async function renderOutput() {
+      const out = q("output");
+      out.innerHTML = '<div class="stat">Loading attendance data...</div>';
+
+      try {
+        // MONTHLY
+        if (state.mode === "month") {
+          await fetchSubjects(state.semester);
+          const d = await fetchMonthly(state.month, state.semester);
+
+          if (!state.subjects || state.subjects.length === 0) {
+            out.innerHTML = `<div class="stat defaulter-yes">No subjects found for ${state.semester}.</div>`;
+            return;
+          }
+
+          let html = `<table><tr><th>Subject</th><th>Total Class</th><th>Present</th><th>Absent</th></tr>`;
+          state.subjects.forEach(s => {
+            const x = d[s] || { total: 0, attended: 0, absent: 0 };
+            const total = x.total !== undefined ? x.total : 0;
+            const attended = x.attended !== undefined ? x.attended : 0;
+            const absent = x.absent !== undefined ? x.absent : 0;
+
+            html += `<tr>
+    <td>${s}</td><td>${total}</td>
+    <td>${attended}</td><td>${absent}</td>
+  </tr>`;
+          });
+          out.innerHTML = html + "</table>";
+        }
+
+        // SEMESTER
+        else if (state.mode === "semester") {
+          const d = await fetchSemester(state.semester);
+          if (Object.keys(d).length === 0) {
+            out.innerHTML = `<div class="stat">No data for ${state.semester}.</div>`;
+            return;
+          }
+          let html = `<table><tr><th>Subject</th><th>%</th></tr>`;
+          for (let s in d) {
+            html += `<tr class="${d[s] < 75 ? "defaulter-row" : ""}">
+        <td>${s}</td><td>${d[s]}%</td>
+      </tr>`;
+          }
+          out.innerHTML = html + "</table>";
+        }
+
+        // ✅ DEFAULTER (OVERALL + SUBJECTWISE TOGGLE)
+        else {
+          const d = await fetchSemester(state.semester);
+          if (Object.keys(d).length === 0) {
+            out.innerHTML = `<div class="stat">No data for ${state.semester}.</div>`;
+            return;
+          }
+
+          let total = 0, count = 0;
+          for (let s in d) { total += parseFloat(d[s]); count++; }
+          const avg = (total / count).toFixed(2);
+
+          let html = `
+        <div class="stat">
+          <div><strong>Overall Attendance Overview</strong></div>
+          <div style="font-size:28px; margin: 10px 0;">${avg}%</div>
+          <div class="${avg < 75 ? "defaulter-yes" : ""}" style="font-size: 14px;">
+            ${avg < 75 ? "⚠️ YOU ARE IN DEFAULTER LIST" : "✅ YOUR ATTENDANCE IS CLEAR"}
+          </div>
+          <button id="toggle-details" style="margin-top:15px; background:#5a6b7a; font-size:12px;">📊 Check Subject-wise Details</button>
+        </div>
+
+        <div id="subject-details" style="display:none; margin-top:20px;">
+          <h4 style="color:#003366; margin-bottom:10px;">Subject-wise Breakdown</h4>
+          <table>
+            <tr><th>Subject</th><th>%</th><th>Status</th></tr>`;
+
+          for (let s in d) {
+            html += `<tr class="${d[s] < 75 ? "defaulter-row" : ""}">
+          <td>${s}</td><td>${d[s]}%</td>
+          <td class="${d[s] < 75 ? "defaulter-yes" : ""}">
+            ${d[s] < 75 ? "Defaulter" : "Clear"}
+          </td>
+        </tr>`;
+          }
+          html += `</table></div>`;
+          out.innerHTML = html;
+
+          q("toggle-details").onclick = () => {
+            const detailDiv = q("subject-details");
+            detailDiv.style.display = detailDiv.style.display === "none" ? "block" : "none";
+          };
+        }
+      } catch (e) {
+        console.error(e);
+        out.innerHTML = '<div class="stat defaulter-yes">An error occurred while rendering data.</div>';
+      }
+    }
+
+    document.querySelectorAll(".menu button[data-type]").forEach(b => {
+      b.onclick = () => {
+        document.querySelectorAll(".menu button").forEach(x => x.classList.remove("active"));
+        b.classList.add("active");
+        state.mode = b.dataset.type;
+        renderControls();
+        renderOutput();
+      };
+    });
+
+    async function logout() {
+      await fetch(`${API}/student/logout`, { method: "POST", credentials: "include" });
+      location.href = "/";
+    }
+
+    (async function init() {
+      await fetchStudent();
+      await fetchSubjects();
+      renderControls();
+      renderOutput();
+    })();
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f7f4;
+            background-image: url('/static/innerheadercommon.jpg');
+            background-repeat: no-repeat;
+            background-position: top center;
+            background-size: contain;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 120px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.15);
+            border: 2px solid #004aad;
+            text-align: center;
+            position: relative;
+            /* 🔑 required for inside positioning */
+        }
+
+        /* 🔴 LOGOUT BUTTON (TOP RIGHT INSIDE BORDER) */
+        .logout-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .logo {
+            width: 120px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #004aad;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #5a6b7a;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: #f8fbff;
+            border: 1px solid #d6e6ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .card p {
+            margin: 8px 0;
+            color: #003366;
+            font-weight: 600;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #004aad;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #003080;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- ✅ LOGOUT -->
+        <a href="#" id="logoutBtn" class="logout-btn">Logout</a>
+
+        <img src="/static/sieslogo.jpg" alt="College Logo" class="logo">
+
+        <h2 id="welcomeText">Welcome, Student</h2>
+        <div class="subtitle">Student Dashboard</div>
+
+        <div id="loading" style="display: none; color: #004aad; margin-bottom: 10px; font-weight: bold;">Loading
+            profile...</div>
+        <div id="errorMsg" style="display: none; color: #dc3545; margin-bottom: 10px; font-weight: bold;"></div>
+
+        <div class="card" id="studentCard">
+            <p>📘 Department: <span id="department">...</span></p>
+            <p>🎓 Year: <span id="year">...</span></p>
+            <p>🆔 Roll Number: <span id="roll_no">...</span></p>
+        </div>
+
+        <a href="/graph" class="btn">View Attendance</a>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loading = document.getElementById('loading');
+            const errorMsg = document.getElementById('errorMsg');
+            const studentCard = document.getElementById('studentCard');
+
+            try {
+                loading.style.display = 'block';
+                studentCard.style.opacity = '0.5';
+
+                const response = await fetch('/api/student/info');
+                loading.style.display = 'none';
+                studentCard.style.opacity = '1';
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/';
+                    } else {
+                        throw new Error('Failed to fetch student info');
+                    }
+                    return;
+                }
+                const data = await response.json();
+
+                document.getElementById('welcomeText').textContent = `Welcome`;
+                document.getElementById('department').textContent = data.department;
+                document.getElementById('year').textContent = data.year;
+                document.getElementById('roll_no').textContent = data.roll_no;
+            } catch (error) {
+                console.error('Error fetching student info:', error);
+                loading.style.display = 'none';
+                errorMsg.textContent = 'Error loading profile. Redirecting...';
+                errorMsg.style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const logoutBtn = e.target;
+            const originalText = logoutBtn.textContent;
+            logoutBtn.textContent = 'Logging out...';
+            logoutBtn.style.pointerEvents = 'none';
+
+            try {
+                const response = await fetch('/api/student/logout', {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    logoutBtn.textContent = originalText;
+                    logoutBtn.style.pointerEvents = 'auto';
+                    alert('Logout failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = '/';
+            }
+        });
+    </script>
+
+</body>
+
+</html>
