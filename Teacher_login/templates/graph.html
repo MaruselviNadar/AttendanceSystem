@@ -191,26 +191,41 @@
       }
     }
 
-    async function fetchSubjects(sem) {
+    async function fetchSubjects() {
       try {
-        const r = await fetch(`${API}/student/subjects?semester=${sem}`, { credentials: "include" });
-        if (!r.ok) {
-          console.error("Subjects fetch failed:", r.status);
-          state.subjects = ["DBMS", "OS", "DSA", "Math"]; // Fallback
-          return;
-        }
+        const r = await fetch(`${API}/student/subjects`, { credentials: "include" });
+        if (!r.ok) throw new Error("Subjects fetch failed");
         const d = await r.json();
-        if (d.subjects && d.subjects.length > 0) {
-          state.subjects = d.subjects.map(s => s.name);
-        } else {
-          console.warn("No subjects returned from API, using fallback");
-          state.subjects = ["DBMS", "OS", "DSA", "Math"];
+        console.log("SUBJECTS FROM API:", d);
+        // Store full subject objects (name, semester)
+        state.subjects = d.subjects || [];
+
+        // Auto-select initial semester if available and not set or invalid
+        if (state.subjects.length > 0) {
+          const availableSems = [...new Set(state.subjects.map(s => s.semester))].sort();
+          // If current state.semester is not in available, pick the first one
+          // Format of state.semester is strictly "Sem X" in some parts, but API returns int. 
+          // Let's standardize state.semester to just the number (as string or int) for easier comparison, 
+          // OR map it. The UI uses "Sem X" for display?
+          // The API calls expect something.
+          // monthly: requests "semester" (string). 
+          // semester: requests "semester" (string).
+          // Let's default state.semester to the integer value of the first available semester
+          if (!state.semester || !availableSems.includes(parseInt(state.semester))) {
+            state.semester = availableSems[0];
+          }
         }
       } catch (e) {
-        console.error("Error fetching subjects:", e);
-        state.subjects = ["DBMS", "OS", "DSA", "Math"];
+        console.error("Subject fetch error:", e);
+        state.subjects = [];
       }
     }
+
+
+
+
+
+
 
     async function fetchMonthly(month, sem) {
       try {
@@ -239,8 +254,25 @@
       const studentTxt = q("student-name").textContent;
       c.innerHTML = `<strong id="student-name">${studentTxt}</strong>`;
 
+      // Semester Selector (Always visible or only for certain modes? Better always visible to filter subjects)
+      if (state.subjects.length > 0) {
+        const sems = [...new Set(state.subjects.map(s => s.semester))].sort();
+
+        const semSel = document.createElement("select");
+        semSel.style.marginLeft = "10px";
+        sems.forEach(s => {
+          semSel.innerHTML += `<option value="${s}" ${s == state.semester ? "selected" : ""}>Sem ${s}</option>`;
+        });
+        semSel.onchange = e => {
+          state.semester = e.target.value;
+          renderOutput();
+        };
+        c.appendChild(semSel);
+      }
+
       if (state.mode === "month") {
         const sel = document.createElement("select");
+        sel.style.marginLeft = "10px";
         ['January', 'February', 'March', 'April', 'May', 'June',
           'July', 'August', 'September', 'October', 'November', 'December']
           .forEach(m => {
@@ -248,33 +280,31 @@
           });
         sel.onchange = e => { state.month = e.target.value; renderOutput(); };
         c.appendChild(sel);
-      } else {
-        const sel = document.createElement("select");
-        ["Sem 1", "Sem 2", "Sem 3", "Sem 4", "Sem 5", "Sem 6"].forEach(s => {
-          sel.innerHTML += `<option ${s === state.semester ? "selected" : ""}>${s}</option>`;
-        });
-        sel.onchange = e => { state.semester = e.target.value; renderOutput(); };
-        c.appendChild(sel);
       }
     }
+
 
     async function renderOutput() {
       const out = q("output");
       out.innerHTML = '<div class="stat">Loading attendance data...</div>';
 
       try {
+        // Filter subjects by current semester
+        // Note: state.semester is likely a string from the Select value, e.g. "3".
+        const currentSemSubjects = state.subjects.filter(s => s.semester == state.semester).map(s => s.name);
+
+        if (currentSemSubjects.length === 0) {
+          out.innerHTML = `<div class="stat">No subjects found for Semester ${state.semester}.</div>`;
+          return;
+        }
+
         // MONTHLY
         if (state.mode === "month") {
-          await fetchSubjects(state.semester);
+          // Removed redundant fetchSubjects call
           const d = await fetchMonthly(state.month, state.semester);
 
-          if (!state.subjects || state.subjects.length === 0) {
-            out.innerHTML = `<div class="stat defaulter-yes">No subjects found for ${state.semester}.</div>`;
-            return;
-          }
-
           let html = `<table><tr><th>Subject</th><th>Total Class</th><th>Present</th><th>Absent</th></tr>`;
-          state.subjects.forEach(s => {
+          currentSemSubjects.forEach(s => {
             const x = d[s] || { total: 0, attended: 0, absent: 0 };
             const total = x.total !== undefined ? x.total : 0;
             const attended = x.attended !== undefined ? x.attended : 0;
@@ -291,34 +321,35 @@
         // SEMESTER
         else if (state.mode === "semester") {
           const d = await fetchSemester(state.semester);
-          if (Object.keys(d).length === 0) {
-            out.innerHTML = `<div class="stat">No data for ${state.semester}.</div>`;
-            return;
-          }
+
           let html = `<table><tr><th>Subject</th><th>%</th></tr>`;
-          for (let s in d) {
-            html += `<tr class="${d[s] < 75 ? "defaulter-row" : ""}">
-        <td>${s}</td><td>${d[s]}%</td>
-      </tr>`;
-          }
+          // Iterate over EXPECTED subjects, not just returned data
+          currentSemSubjects.forEach(s => {
+            const percent = d[s] !== undefined ? d[s] : 0; // Default to 0% if no data
+            const isDefaulter = percent < 75;
+
+            html += `<tr class="${isDefaulter ? "defaulter-row" : ""}">
+                <td>${s}</td><td>${percent}%</td>
+              </tr>`;
+          });
           out.innerHTML = html + "</table>";
         }
 
         // ✅ DEFAULTER (OVERALL + SUBJECTWISE TOGGLE)
         else {
           const d = await fetchSemester(state.semester);
-          if (Object.keys(d).length === 0) {
-            out.innerHTML = `<div class="stat">No data for ${state.semester}.</div>`;
-            return;
-          }
 
-          let total = 0, count = 0;
-          for (let s in d) { total += parseFloat(d[s]); count++; }
-          const avg = (total / count).toFixed(2);
+          // Calculate average based on ALL subjects in this semester
+          let total = 0;
+          currentSemSubjects.forEach(s => {
+            total += (d[s] !== undefined ? parseFloat(d[s]) : 0);
+          });
+          const count = currentSemSubjects.length;
+          const avg = count > 0 ? (total / count).toFixed(2) : 0;
 
           let html = `
         <div class="stat">
-          <div><strong>Overall Attendance Overview</strong></div>
+          <div><strong>Overall Attendance Overview (Sem ${state.semester})</strong></div>
           <div style="font-size:28px; margin: 10px 0;">${avg}%</div>
           <div class="${avg < 75 ? "defaulter-yes" : ""}" style="font-size: 14px;">
             ${avg < 75 ? "⚠️ YOU ARE IN DEFAULTER LIST" : "✅ YOUR ATTENDANCE IS CLEAR"}
@@ -331,14 +362,18 @@
           <table>
             <tr><th>Subject</th><th>%</th><th>Status</th></tr>`;
 
-          for (let s in d) {
-            html += `<tr class="${d[s] < 75 ? "defaulter-row" : ""}">
-          <td>${s}</td><td>${d[s]}%</td>
-          <td class="${d[s] < 75 ? "defaulter-yes" : ""}">
-            ${d[s] < 75 ? "Defaulter" : "Clear"}
+          currentSemSubjects.forEach(s => {
+            const percent = d[s] !== undefined ? d[s] : 0;
+            const isDefaulter = percent < 75;
+
+            html += `<tr class="${isDefaulter ? "defaulter-row" : ""}">
+          <td>${s}</td><td>${percent}%</td>
+          <td class="${isDefaulter ? "defaulter-yes" : ""}">
+            ${isDefaulter ? "Defaulter" : "Clear"}
           </td>
         </tr>`;
-          }
+          });
+
           html += `</table></div>`;
           out.innerHTML = html;
 
