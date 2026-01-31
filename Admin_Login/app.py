@@ -75,7 +75,7 @@ def admin_logout():
 def add_teacher():
     data = request.json
 
-    # ✅ BACKEND SAFETY CHECK
+    #  BACKEND SAFETY CHECK
     if not data.get("name") or not data.get("department") or not data.get("teacher_id") or not data.get("password"):
         return jsonify({
             "status": "fail",
@@ -116,17 +116,57 @@ def get_teachers():
     cursor.close()
     db.close()
     return jsonify(teachers)
-
 @app.route("/delete_teacher", methods=["POST"])
 def delete_teacher():
+    conn = None
+    cursor = None
+
     data = request.json
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("DELETE FROM teachers WHERE teacher_id=%s", (data["teacher_id"],))
-    db.commit()
-    cursor.close()
-    db.close()
-    return jsonify({"message": "Teacher deleted successfully"})
+    teacher_id = data.get("teacher_id")
+
+    print("Deleting teacher:", teacher_id)
+
+    if not teacher_id:
+        return jsonify({
+             "status": "fail",
+    "message": "Delete failed"
+        })
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # delete mapping first (FK safe)
+        cursor.execute(
+            "DELETE FROM teacher_subject_mapping WHERE teacher_id=%s",
+            (teacher_id,)
+        )
+
+        cursor.execute(
+            "DELETE FROM teachers WHERE teacher_id=%s",
+            (teacher_id,)
+        )
+
+        conn.commit()
+        return jsonify({
+            "status": "success",
+    "message": "Teacher deleted successfully"
+        })
+
+    except Exception as e:
+        print("Error deleting teacher:", e)
+        if conn:
+            conn.rollback()
+        return jsonify({
+            "success": False,
+            "message": "Delete failed"
+        })
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 @app.route("/update_teacher", methods=["POST"])
 def update_teacher():
@@ -211,33 +251,53 @@ def assign_subject():
 # ---------- CLASS TEACHER ASSIGNMENT ----------
 @app.route("/api/assign-class-teacher", methods=["POST"])
 def assign_class_teacher():
-    data = request.json
+   data = request.json
+   ay = data["academic_year"]
+   if len(ay) == 7 and "-" in ay:
+        start, end = ay.split("-")
+        data["academic_year"] = f"{start}-20{end}"
 
-    db = get_db_connection()
-    cursor = db.cursor()
 
-    try:
+   db = get_db_connection()
+   cursor = db.cursor()
+
+   try:
         cursor.execute("""
-            INSERT INTO class_teacher_assignment
-            (teacher_id, stream, year, academic_year)
-            VALUES (%s, %s, %s, %s)
+            SELECT 1 FROM class_teacher_assignment
+            WHERE teacher_id = %s AND academic_year = %s
+            LIMIT 1
         """, (
             data["teacher_id"],
-            data["stream"],
-            data["year"],
             data["academic_year"]
         ))
+
+        if cursor.fetchone():
+            return jsonify({
+                "message": "This teacher is already assigned for this academic year"
+            }), 400
+        cursor.execute("""
+           INSERT INTO class_teacher_assignment
+           (teacher_id, stream, year, academic_year)
+           VALUES (%s, %s, %s, %s)
+       """, (
+           data["teacher_id"],
+           data["stream"],
+           data["year"],
+           data["academic_year"]
+       ))
         db.commit()
         return jsonify({"message": "Class teacher assigned successfully"})
 
-    except mysql.connector.IntegrityError:
-        return jsonify({
-            "message": "Class teacher already assigned for this class & year"
+   except mysql.connector.IntegrityError:
+       return jsonify({
+           "message": "Class teacher already assigned for this class & year"
         })
 
-    finally:
-        cursor.close()
-        db.close()
+   finally:
+      cursor.close()
+      db.close()
+
+
 
 
 # ---------- STUDENT MANAGEMENT ----------

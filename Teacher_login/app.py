@@ -65,7 +65,8 @@ def login():
 
     if not teacher_id or not password:
         flash("Please enter both Teacher ID and Password", "error")
-        return redirect(url_for("index"))
+        #return redirect(url_for("index"))
+        return redirect(url_for("teacher_login"))
 
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
@@ -81,12 +82,16 @@ def login():
 
     if user is None:
         flash("Invalid Teacher ID or Password", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("teacher_login"))
+        
+
 
     # Plain-text password verification
     if user["password"] != password:
         flash("Invalid Teacher ID or Password", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("teacher_login"))
+       
+
 
     session["teacher_id"] = user["teacher_id"]
     session["teacher_name"] = user["name"]
@@ -200,19 +205,17 @@ def get_class_teacher_assignment():
 #basic routing for class teacher
 @app.route("/api/teacher/class-teacher-info")
 def class_teacher_info():
-    info = get_class_teacher_assignment()
+   info = get_class_teacher_assignment()
 
-    if not info:
+   if not info:
         return jsonify({"is_class_teacher": False})
 
-    return jsonify({
-        "is_class_teacher": True,
-        "stream": info["stream"],
-        "year": info["year"],
-        "academic_year": info["academic_year"]
+   return jsonify({
+      "is_class_teacher": True,
+      "stream": info["stream"],
+      "year": info["year"],
+      "academic_year": info["academic_year"]
     })
-
-
 
 
 
@@ -839,23 +842,47 @@ def student_info():
 
 # ---------------- SUBJECTS ----------------
 @app.route("/api/student/subjects")
-def subjects():
-    if not login_required():
+def student_subjects():
+    if 'roll_no' not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
     conn = get_db_connection()
-    cur = conn.cursor()
-    if semester:
-            cur.execute("SELECT subject_name FROM subjects WHERE semester = %s", (semester,))
-    else:
-            cur.execute("SELECT subject_name FROM subjects")
-    rows = cur.fetchall()
+    cur = conn.cursor(dictionary=True)
+
+    # Get student's year & department
+    cur.execute("""
+        SELECT year, department
+        FROM students
+        WHERE roll_no = %s
+    """, (session['roll_no'],))
+
+    student = cur.fetchone()
+    if not student:
+        cur.close()
+        conn.close()
+        return jsonify({"subjects": []})
+
+    # Map department to stream (e.g., BSCIT -> IT)
+    dept = student['department']
+    stream = "IT" if dept == "BSCIT" else dept
+
+    # Fetch subjects based on student year & mapped stream
+    cur.execute("""
+        SELECT subject_name, semester
+        FROM subjects
+        WHERE stream = %s
+        ORDER BY semester, subject_name
+    """, (stream,))
+
+    subjects = cur.fetchall()
 
     cur.close()
     conn.close()
+
     return jsonify({
-        "subjects": [{"name": r[0]} for r in rows]
+        "subjects": [{"name": s["subject_name"], "semester": s["semester"]} for s in subjects]
     })
+
 
 
 # ---------------- MONTHLY ATTENDANCE ----------------
@@ -865,22 +892,53 @@ def monthly():
         return jsonify({"error": "Unauthorized"}), 401
 
     month = request.args.get("month")
-    semester = request.args.get("semester")
+    semester = request.args.get("semester") # Expected as int/string e.g. "3" or "Sem 3" via frontend select
     roll_no = session['roll_no']
 
+    # Normalize semester
+    try:
+        sem_num = int(semester.split()[-1]) if semester and " " in semester else int(semester)
+    except:
+        sem_num = None
+
     conn = get_db_connection()
+    cur = conn.cursor(dictionary=True) # Dictionary cursor for easier student fetch
+    
+    # 1. Get student info for stream mapping
+    cur.execute("SELECT department, year FROM students WHERE roll_no = %s", (roll_no,))
+    student = cur.fetchone()
+    if not student:
+        cur.close()
+        conn.close()
+        return jsonify({"data": {}})
+        
+    dept = student['department']
+    stream = "IT" if dept == "BSCIT" else dept
+
+    cur.close()
+    
+    # 2. Main Query
+    # Join attendance directly to subjects via name matching on lecture_key
+    # Parse date from lecture_key (last part after _)
+    conn = get_db_connection() # Reconnect or use same? Reusing is fine but let's be clean.
     cur = conn.cursor()
+    
     query = """
     SELECT s.subject_name,
-           COUNT(a.id) AS total,
-           SUM(a.status='Present') AS attended,
-           SUM(a.status='Absent') AS absent
+           COUNT(*) AS total,
+           SUM(a.status='P') AS attended,
+           SUM(a.status='A') AS absent
     FROM attendance a
-        JOIN subjects s ON a.subject_id = s.id
-        WHERE a.roll_no=%s AND LOWER(MONTHNAME(a.date))=LOWER(%s) AND a.semester=%s
-        GROUP BY s.subject_name
-        """
-    cur.execute(query, (roll_no, month, semester))
+    JOIN students stu ON a.student_id = stu.id
+    JOIN subjects s ON a.lecture_key LIKE CONCAT(s.subject_name, '_%')
+    WHERE stu.roll_no = %s
+      AND s.stream = %s
+      AND s.semester = %s
+      AND MONTHNAME(STR_TO_DATE(SUBSTRING_INDEX(a.lecture_key, '_', -1), '%Y-%m-%dT%H:%i')) = %s
+    GROUP BY s.subject_name
+    """
+    
+    cur.execute(query, (roll_no, stream, sem_num, month))
     rows = cur.fetchall()
     
     result = {}
@@ -902,18 +960,44 @@ def semester():
 
     sem = request.args.get("semester")
     roll_no = session['roll_no']
+    
+    try:
+        sem_num = int(sem.split()[-1]) if sem and " " in sem else int(sem)
+    except:
+        sem_num = None
 
     conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    
+    # 1. Get student info
+    cur.execute("SELECT department FROM students WHERE roll_no = %s", (roll_no,))
+    student = cur.fetchone()
+    if not student:
+        cur.close()
+        conn.close()
+        return jsonify({"data": {}})
+    
+    dept = student['department']
+    stream = "IT" if dept == "BSCIT" else dept
+    
+    cur.close()
+    
+    conn = get_db_connection()
     cur = conn.cursor()
+    
     query = """
     SELECT s.subject_name,
-               CAST(SUM(a.status='Present')/COUNT(*)*100 AS FLOAT)
-        FROM attendance a
-        JOIN subjects s ON a.subject_id=s.id
-        WHERE a.roll_no=%s AND a.semester=%s
-        GROUP BY s.subject_name
-        """
-    cur.execute(query, (session['roll_no'], sem))
+           CAST(SUM(a.status='P')/COUNT(*)*100 AS FLOAT)
+    FROM attendance a
+    JOIN students stu ON a.student_id = stu.id
+    JOIN subjects s ON a.lecture_key LIKE CONCAT(s.subject_name, '_%')
+    WHERE stu.roll_no=%s
+      AND s.stream = %s
+      AND s.semester = %s
+    GROUP BY s.subject_name
+    """
+    
+    cur.execute(query, (roll_no, stream, sem_num))
     rows = cur.fetchall()
 
     cur.close()
@@ -930,17 +1014,58 @@ def defaulter():
 
     sem = request.args.get("semester")
     subject = request.args.get("subject")
-
+    roll_no = session['roll_no']
+    
+    try:
+        sem_num = int(sem.split()[-1]) if sem and " " in sem else int(sem)
+    except:
+        sem_num = None
+    
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    
+    # 1. Get student info
+    cur.execute("SELECT department FROM students WHERE roll_no = %s", (roll_no,))
+    st_row = cur.fetchone()
+    if not st_row:
+        cur.close()
+        conn.close()
+        return jsonify({"attendance_percentage": 0, "is_defaulter": True})
+        
+    dept = st_row['department']
+    stream = "IT" if dept == "BSCIT" else dept
+    
+    cur.close()
     conn = get_db_connection()
     cur = conn.cursor()
-    query = """
-    SELECT CAST(SUM(a.status='Present')/COUNT(*)*100 AS FLOAT)
-    FROM attendance a
-    JOIN subjects s ON a.subject_id=s.id
-    WHERE a.roll_no=%s AND a.semester=%s AND s.subject_name=%s
-    """
-    cur.execute(query, (session['roll_no'], sem, subject))
-    percent = cur.fetchone()[0] or 0
+    
+    if subject:
+        query = """
+        SELECT CAST(SUM(a.status='P')/COUNT(*)*100 AS FLOAT)
+        FROM attendance a
+        JOIN students stu ON a.student_id = stu.id
+        JOIN subjects s ON a.lecture_key LIKE CONCAT(s.subject_name, '_%')
+        WHERE stu.roll_no=%s 
+          AND s.subject_name=%s
+          AND s.stream = %s
+          AND s.semester = %s
+        """
+        cur.execute(query, (roll_no, subject, stream, sem_num))
+    else:
+         # Overall average for the SEMESTER
+        query = """
+        SELECT CAST(SUM(a.status='P')/COUNT(*)*100 AS FLOAT)
+        FROM attendance a
+        JOIN students stu ON a.student_id = stu.id
+        JOIN subjects s ON a.lecture_key LIKE CONCAT(s.subject_name, '_%')
+        WHERE stu.roll_no=%s
+          AND s.stream = %s
+          AND s.semester = %s
+        """
+        cur.execute(query, (roll_no, stream, sem_num))
+
+    result = cur.fetchone()
+    percent = result[0] if result and result[0] is not None else 0
 
     cur.close()
     conn.close()
