@@ -1,960 +1,1061 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Admin Dashboard</title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard</title>
 
-<style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background-color: #f5f7f4;
-    background-image: url("{{ url_for('static', filename='innerheadercommon.jpg') }}");
-    background-repeat: no-repeat;
-    background-position: top center;
-    background-size: contain;
-}
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f5f7f4;
+        background-image: url("{{ url_for('static', filename='innerheadercommon.jpg') }}");
+        background-repeat: no-repeat;
+        background-position: top center;
+        background-size: contain;
+      }
 
-.wrapper {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 60px;
-}
+      .wrapper {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 60px;
+      }
 
-.dashboard {
-    width: 420px;
-    background: white;
-    border-radius: 14px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    padding: 30px;
-}
+      .required {
+        color: red;
+        margin-left: 4px;
+      }
+      .highlight-id {
+        background-color: #fff3cd;
+        border: 2px solid #ff9800;
+        font-weight: bold;
+        color: #b26a00;
+        cursor: not-allowed;
+      }
 
-.section {
-    display: none;
-}
+      .dashboard {
+        width: 420px;
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        padding: 30px;
+      }
 
-h2 {
-    text-align: center;
-    color: #004a99;
-    margin-bottom: 20px;
-}
+      .section {
+        display: none;
+      }
 
-.btn {
-    width: 100%;
-    padding: 14px;
-    margin-top: 12px;
-    border: none;
-    border-radius: 8px;
-    background: #004a99;
-    color: white;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-}
+      h2 {
+        text-align: center;
+        color: #004a99;
+        margin-bottom: 20px;
+      }
 
-.btn:hover { background: #003366; }
+      .btn {
+        width: 100%;
+        padding: 14px;
+        margin-top: 12px;
+        border: none;
+        border-radius: 8px;
+        background: #004a99;
+        color: white;
+        font-size: 15px;
+        font-weight: bold;
+        cursor: pointer;
+      }
 
-.back { background: #666; }
+      .btn:hover {
+        background: #003366;
+      }
 
-label {
-    margin-top: 10px;
-    display: block;
-    font-weight: bold;
-}
+      .back {
+        background: #666;
+      }
 
-input, select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-}
+      label {
+        margin-top: 10px;
+        display: block;
+        font-weight: bold;
+      }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+      input,
+      select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+      }
 
-th {
-    background: #004a99;
-    color: white;
-    padding: 8px;
-}
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
 
-td {
-    padding: 8px;
-    text-align: center;
-}
-.alert-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 9999;
-}
+      th {
+        background: #004a99;
+        color: white;
+        padding: 8px;
+      }
 
-.alert-box {
-  background: white;
-  width: 320px;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  margin: 15% auto;
-}
+      td {
+        padding: 8px;
+        text-align: center;
+      }
+      .alert-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 9999;
+      }
 
-.alert-buttons {
-  margin-top: 15px;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
+      .alert-box {
+        background: white;
+        width: 320px;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin: 15% auto;
+      }
 
-.alert-buttons button {
-  padding: 8px 18px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
+      .alert-buttons {
+        margin-top: 15px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
 
-#alertOk {
-  background: #0b5ed7;
-  color: white;
-}
+      .alert-buttons button {
+        padding: 8px 18px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
 
-#alertCancel {
-  background: #6c757d;
-  color: white;
-}
+      #alertOk {
+        background: #0b5ed7;
+        color: white;
+      }
 
-</style>
-</head>
+      #alertCancel {
+        background: #6c757d;
+        color: white;
+      }
+    </style>
+  </head>
 
-<body>
+  <body>
+    <div class="wrapper">
+      <div class="dashboard">
+        <img
+          src="{{ url_for('static', filename='sieslogo.jpg') }}"
+          alt="Logo"
+        />
 
-<div class="wrapper">
-<div class="dashboard">
-<img src="{{ url_for('static', filename='sieslogo.jpg') }}" alt="Logo">
+        <!-- MAIN MENU -->
+        <div id="mainMenu">
+          <h2>Welcome Admin</h2>
+          <button class="btn" onclick="showTeacherMenu()">
+            Teacher Management
+          </button>
+          <button class="btn" onclick="showStudentMenu()">
+            Student Management
+          </button>
+        </div>
 
-<!-- MAIN MENU -->
-<div id="mainMenu">
-    <h2>Welcome Admin</h2>
-    <button class="btn" onclick="showTeacherMenu()">Teacher Management</button>
-    <button class="btn" onclick="showStudentMenu()">Student Management</button>
-</div>
+        <!-- TEACHER MENU -->
+        <div id="teacherMenu" class="section">
+          <h2>Teacher Management</h2>
+          <button class="btn" onclick="showAddTeacher()">Add Teacher</button>
+          <button class="btn" onclick="showViewTeacher()">View Teachers</button>
+          <button class="btn" onclick="showDeleteTeacher()">
+            Delete Teachers
+          </button>
+          <button class="btn" onclick="showAssignSubject()">
+            Map Subject To Teacher
+          </button>
+          <button class="btn" onclick="showAssignClassTeacher()">
+            Assign Class Teacher
+          </button>
 
-<!-- TEACHER MENU -->
-<div id="teacherMenu" class="section">
-    <h2>Teacher Management</h2>
-    <button class="btn" onclick="showAddTeacher()">Add Teacher</button>
-    <button class="btn" onclick="showViewTeacher()">View Teachers</button>
-    <button class="btn" onclick="showDeleteTeacher()">Delete Teachers</button>
-    <button class="btn" onclick="showAssignSubject()">Map Subject To Teacher</button>
-    <button class="btn" onclick="showAssignClassTeacher()">Assign Class Teacher</button>
+          <button class="btn back" onclick="goBack()">Back</button>
+        </div>
 
+        <!-- STUDENT MENU -->
+        <div id="studentMenu" class="section">
+          <h2>Student Management</h2>
+          <button class="btn" onclick="showAddStudent()">Add Student</button>
+          <button class="btn" onclick="showViewStudent()">View Students</button>
+          <button class="btn" onclick="showDeleteStudent()">
+            Delete Student
+          </button>
+          <button class="btn back" onclick="goBack()">Back</button>
+        </div>
 
-    <button class="btn back" onclick="goBack()">Back</button>
-</div>
+        <!-- ADD TEACHER -->
+        <div id="addTeacher" class="section">
+          <h2>Add Teacher</h2>
+          <label>Name<span class="required">*</span></label
+          ><input id="tname" required />
+          <label>Department<span class="required">*</span></label>
+          <select id="tdept" required>
+            <option value="">Select Department</option>
+            <option>CS</option>
+            <option>IT</option>
+          </select>
+          <label>Teacher ID<span class="required">*</span></label
+          ><input id="tid" />
+          <label>Password<span class="required">*</span></label
+          ><input type="password" id="tpass" required />
+          <button class="btn" onclick="saveTeacher()">Save</button>
+          <!--<button class="btn back" onclick="goBack()">Back</button>-->
+          <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+        </div>
+        <!-- UPDATE TEACHER -->
+        <div id="updateTeacher" class="section">
+          <h2>Update Teacher</h2>
 
-<!-- STUDENT MENU -->
-<div id="studentMenu" class="section">
-    <h2>Student Management</h2>
-    <button class="btn" onclick="showAddStudent()">Add Student</button>
-    <button class="btn" onclick="showViewStudent()">View Students</button>
-    <button class="btn" onclick="showDeleteStudent()">Delete Student</button>
-    <button class="btn back" onclick="goBack()">Back</button>
-</div>
+          <label>Name</label>
+          <input id="utname" />
 
-<!-- ADD TEACHER -->
-<div id="addTeacher" class="section">
-    <h2>Add Teacher</h2>
-    <label>Name</label><input id="tname">
-    <label>Department</label>
-    <select id="tdept"><option value="">Select Department</option><option>CS</option><option>IT</option></select>
-    <label>Teacher ID</label><input id="tid">
-    <label>Password</label><input type="password" id="tpass">
-    <button class="btn" onclick="saveTeacher()">Save</button>
-    <!--<button class="btn back" onclick="goBack()">Back</button>-->
-    <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+          <label>Department</label>
+          <select id="utdept">
+            <option>CS</option>
+            <option>IT</option>
+          </select>
 
-</div>
-<!-- UPDATE TEACHER -->
-<div id="updateTeacher" class="section">
-    <h2>Update Teacher</h2>
+          <label>Teacher ID</label>
+          <input id="utid" readonly class="highlight-id" />
 
-    <label>Name</label>
-    <input id="utname">
+          <button class="btn" onclick="updateTeacher()">Update</button>
+          <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+        </div>
 
-    <label>Department</label>
-    <select id="utdept">
-        <option>CS</option>
-        <option>IT</option>
-    </select>
+        <!-- VIEW TEACHERS -->
+        <div id="viewTeacher" class="section">
+          <h2>Teachers</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Dept</th>
+                <th>ID</th>
+              </tr>
+            </thead>
+            <tbody id="teacherTable"></tbody>
+          </table>
+          <!--<button class="btn back" onclick="goBack()">Back</button>-->
+          <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+        </div>
 
-    <label>Teacher ID</label>
-    <input id="utid" readonly>
-
-    <button class="btn" onclick="updateTeacher()">Update</button>
-    <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
-</div>
-
-
-<!-- VIEW TEACHERS -->
-<div id="viewTeacher" class="section">
-    <h2>Teachers</h2>
-    <table>
-        <thead><tr><th>Name</th><th>Dept</th><th>ID</th></tr></thead>
-        <tbody id="teacherTable"></tbody>
-    </table>
-    <!--<button class="btn back" onclick="goBack()">Back</button>-->
-    <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
-
-</div>
-
-<!-- DELETE TEACHER -->
-<div id="deleteTeacher" class="section">
-    <h2>Delete Teacher</h2>
-    <!--<select id="deleteList"></select>-->
-     <select id="deleteList">
-        <option disabled selected>Select teacher</option>
-        {% for teacher in teachers %}
+        <!-- DELETE TEACHER -->
+        <div id="deleteTeacher" class="section">
+          <h2>Delete Teacher</h2>
+          <!--<select id="deleteList"></select>-->
+          <select id="deleteList">
+            <option disabled selected>Select teacher</option>
+            {% for teacher in teachers %}
             <option value="{{ teacher.teacher_id }}">{{ teacher.name }}</option>
-        {% endfor %}
-    </select>
-    <button class="btn" onclick="deleteTeacherData()">Delete</button>
-    <!--<button class="btn back" onclick="goBack()">Back</button>-->
-    <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+            {% endfor %}
+          </select>
+          <button class="btn" onclick="deleteTeacherData()">Delete</button>
+          <!--<button class="btn back" onclick="goBack()">Back</button>-->
+          <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+        </div>
 
-</div>
+        <!-- ASSIGN SUBJECT -->
+        <div id="assignSubject" class="section">
+          <h2>Map subject to teacher</h2>
+
+          <label>Teacher<span class="required">*</span></label>
+          <select id="as_teacher" required></select>
+
+          <label>Stream<span class="required">*</span></label>
+          <select id="as_stream" required>
+            <option value="">Select</option>
+            <option value="IT">IT</option>
+            <option value="CS">CS</option>
+          </select>
+
+          <label>Year<span class="required">*</span></label>
+          <select id="as_year" required>
+            <option value="">Select</option>
+            <option value="1">First Year</option>
+            <option value="2">Second Year</option>
+            <option value="3">Third Year</option>
+          </select>
+
+          <label>Semester<span class="required">*</span></label>
+          <select id="as_semester" required>
+            <option value="">Select</option>
+            <option value="1">Sem 1</option>
+            <option value="2">Sem 2</option>
+            <option value="3">Sem 3</option>
+            <option value="4">Sem 4</option>
+            <option value="5">Sem 5</option>
+            <option value="6">Sem 6</option>
+          </select>
+
+          <label>Subject<span class="required">*</span></label>
+          <select id="as_subject" required></select>
+
+          <button class="btn" onclick="assignSubject()">Assign</button>
+          <!-- <button class="btn back" onclick="goBack()">Back</button>-->
+          <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+        </div>
+        <!-- ASSIGN CLASS TEACHER -->
+        <div id="assignClassTeacher" class="section">
+          <h2>Assign Class Teacher</h2>
+
+          <label>Teacher<span class="required">*</span></label>
+          <select id="ct_teacher" required></select>
+
+          <label>Stream<span class="required">*</span></label>
+          <select id="ct_stream" required>
+            <option value="BSCIT">IT</option>
+            <option value="CS">CS</option>
+          </select>
+
+          <label>Year<span class="required">*</span></label>
+          <select id="ct_year" required>
+            <option value="1">First Year</option>
+            <option value="2">Second Year</option>
+            <option value="3">Third Year</option>
+          </select>
+
+          <label>Academic Year<span class="required">*</span></label>
+          <input id="ct_academic_year" placeholder="2024-25" required />
+
+          <button class="btn" onclick="assignClassTeacher()">Assign</button>
+          <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+        </div>
+
+        <!-- ADD STUDENT -->
+        <div id="addStudent" class="section">
+          <h2>Add Student</h2>
+          <label>Student Name<span class="required">*</span></label>
+          <input id="sname" required />
+          <label>Department<span class="required">*</span></label>
+          <select id="sdept" required>
+            <option value="">Select Department</option>
+            <option value="CS">CS</option>
+            <option value="BSCIT">IT</option>
+          </select>
+          <label>Year<span class="required">*</span></label>
+          <select id="syear" required>
+            <option value="">Select Year</option>
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+          </select>
+          <label>Roll No<span class="required">*</span></label
+          ><input id="sroll" required />
+          <label>Password<span class="required">*</span></label
+          ><input type="password" id="spass" required />
+          <button class="btn" onclick="saveStudent()">Save</button>
+          <!--<button class="btn back" onclick="goBack()">Back</button>-->
+          <button class="btn back" onclick="goBackToStudentMenu()">Back</button>
+        </div>
+
+        <!-- VIEW STUDENTS -->
+        <div id="viewStudent" class="section">
+          <h2>Students</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Dept</th>
+                <th>Year</th>
+                <th>Roll</th>
+              </tr>
+            </thead>
+            <tbody id="studentTable"></tbody>
+          </table>
+          <!-- <button class="btn back" onclick="goBack()">Back</button>-->
+          <button class="btn back" onclick="goBackToStudentMenu()">Back</button>
+        </div>
+
+        <!-- DELETE STUDENT -->
+        <div id="deleteStudent" class="section">
+          <h2>Delete Student</h2>
+          <select id="deleteStudentList"></select>
+          <button class="btn" onclick="deleteStudentData()">Delete</button>
+          <!--  <button class="btn back" onclick="goBack()">Back</button>-->
+          <button class="btn back" onclick="goBackToStudentMenu()">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      function openUpdateTeacher(id, name, dept) {
+        hideAll();
+        $("updateTeacher").style.display = "block";
+
+        utid.value = id;
+        utname.value = name;
+        utdept.value = dept;
+      }
+
+      function hideAll() {
+        [
+          "mainMenu",
+          "teacherMenu",
+          "studentMenu",
+          "addTeacher",
+          "viewTeacher",
+          "deleteTeacher",
+          "addStudent",
+          "viewStudent",
+          "deleteStudent",
+          "assignSubject",
+          "assignClassTeacher",
+          "updateTeacher",
+        ].forEach((id) => ($(id).style.display = "none"));
+      }
+
+      function goBack() {
+        hideAll();
+        $("mainMenu").style.display = "block";
+      }
+      function goBackToMain() {
+        hideAll();
+        $("mainMenu").style.display = "block";
+      }
+
+      function goBackToTeacherMenu() {
+        hideAll();
+        $("teacherMenu").style.display = "block";
+      }
+
+      function goBackToStudentMenu() {
+        hideAll();
+        $("studentMenu").style.display = "block";
+      }
+      function showTeacherMenu() {
+        hideAll();
+        $("teacherMenu").style.display = "block";
+      }
+      function showStudentMenu() {
+        hideAll();
+        $("studentMenu").style.display = "block";
+      }
+
+      function showAddTeacher() {
+        hideAll();
+        $("addTeacher").style.display = "block";
+      }
+      function showViewTeacher() {
+        hideAll();
+        $("viewTeacher").style.display = "block";
+        loadTeachers();
+      }
+      //function showDeleteTeacher(){ hideAll(); $("deleteTeacher").style.display="block"; loadTeacherDelete(); }
+      function showDeleteTeacher() {
+        hideAll();
+        $("deleteTeacher").style.display = "block";
+
+        // ✅ force reload every time
+        deleteList.innerHTML = "";
+        loadTeacherDelete();
+      }
+      function showAssignSubject() {
+        hideAll();
+        $("assignSubject").style.display = "block";
+        loadAssignTeachers();
+      }
+
+      function showAddStudent() {
+        hideAll();
+        $("addStudent").style.display = "block";
+      }
+      function showViewStudent() {
+        hideAll();
+        $("viewStudent").style.display = "block";
+        loadStudents();
+      }
+      //function showDeleteStudent(){ hideAll(); $("deleteStudent").style.display="block"; loadStudentDelete(); }
+      function showDeleteStudent() {
+        hideAll();
+        $("deleteStudent").style.display = "block";
+
+        // force refresh
+        deleteStudentList.innerHTML = "";
+        loadStudentDelete();
+      }
+
+      /*function saveTeacher(){
+      fetch("/add_teacher",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name:tname.value,department:tdept.value,teacher_id:tid.value,password:tpass.value})})
+      //.then(r=>r.json()).then(d=>alert(d.message));
+      .then(r=>r.json())
+      //.then(d=>showAlert(d.message,"green"));
+      .then(d => {
+          if(d.status === "success"){
+              showAlert(d.message, "green");
+
+              // optional: clear fields on success
+              tname.value = "";
+              tdept.value = "";
+              tid.value = "";
+              tpass.value = "";
+          } else {
+              showAlert(d.message, "red");
+          }
+      });
 
 
+      }*/
+      function saveTeacher() {
+        const name = tname.value.trim();
+        const dept = tdept.value.trim();
+        const id = tid.value.trim();
+        const pass = tpass.value.trim();
 
-<!-- ASSIGN SUBJECT -->
-<div id="assignSubject" class="section">
-    <h2>Map subject to teacher</h2>
+        /* ✅ 1. EMPTY FIELD CHECK */
+        if (name === "" || dept === "" || id === "" || pass === "") {
+          showAlert("Fill all the fields", "red");
+          return; // ⛔ STOP here
+        }
 
-    <label>Teacher</label>
-    <select id="as_teacher"></select>
-
-    <label>Stream</label>
-    <select id="as_stream">
-        <option value="">Select</option>
-        <option value="IT">IT</option>
-        <option value="CS">CS</option>
-    </select>
-
-    <label>Year</label>
-    <select id="as_year">
-        <option value="">Select</option>
-        <option value="1">First Year</option>
-        <option value="2">Second Year</option>
-        <option value="3">Third Year</option>
-    </select>
-
-    <label>Semester</label>
-    <select id="as_semester">
-        <option value="">Select</option>
-        <option value="1">Sem 1</option>
-        <option value="2">Sem 2</option>
-        <option value="3">Sem 3</option>
-        <option value="4">Sem 4</option>
-        <option value="5">Sem 5</option>
-        <option value="6">Sem 6</option>
-    </select>
-
-    <label>Subject</label>
-    <select id="as_subject"></select>
-
-    <button class="btn" onclick="assignSubject()">Assign</button>
-   <!-- <button class="btn back" onclick="goBack()">Back</button>-->
-    <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
-
-</div>
-<!-- ASSIGN CLASS TEACHER -->
-<div id="assignClassTeacher" class="section">
-    <h2>Assign Class Teacher</h2>
-
-    <label>Teacher</label>
-    <select id="ct_teacher"></select>
-
-    <label>Stream</label>
-    <select id="ct_stream">
-        <option value="BSCIT">IT</option>
-        <option value="CS">CS</option>
-    </select>
-
-    <label>Year</label>
-    <select id="ct_year">
-        <option value="1">First Year</option>
-        <option value="2">Second Year</option>
-        <option value="3">Third Year</option>
-    </select>
-
-    <label>Academic Year</label>
-    <input id="ct_academic_year" placeholder="2024-25">
-
-    <button class="btn" onclick="assignClassTeacher()">Assign</button>
-    <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
-</div>
-
-<!-- ADD STUDENT -->
-<div id="addStudent" class="section">
-    <h2>Add Student</h2>
-    <label>Student Name</label>
-    <input id="sname">
-    <label>Department</label>
-    <select id="sdept"><option value="">Select Department</option><option value="CS">CS</option><option value="BSCIT">IT</option></select>
-    <label>Year</label>
-    <select id="syear"><option value="">Select Year</option><option>1</option><option>2</option><option>3</option></select>
-    <label>Roll No</label><input id="sroll">
-    <label>Password</label><input type="password" id="spass">
-    <button class="btn" onclick="saveStudent()">Save</button>
-    <!--<button class="btn back" onclick="goBack()">Back</button>-->
-    <button class="btn back" onclick="goBackToStudentMenu()">Back</button>
-
-</div>
-
-<!-- VIEW STUDENTS -->
-<div id="viewStudent" class="section">
-    <h2>Students</h2>
-    <table>
-        <thead><tr><th>Dept</th><th>Year</th><th>Roll</th></tr></thead>
-        <tbody id="studentTable"></tbody>
-    </table>
-   <!-- <button class="btn back" onclick="goBack()">Back</button>-->
-    <button class="btn back" onclick="goBackToStudentMenu()">Back</button>
-
-</div>
-
-<!-- DELETE STUDENT -->
-<div id="deleteStudent" class="section">
-    <h2>Delete Student</h2>
-    <select id="deleteStudentList"></select>
-    <button class="btn" onclick="deleteStudentData()">Delete</button>
-  <!--  <button class="btn back" onclick="goBack()">Back</button>-->
-    <button class="btn back" onclick="goBackToStudentMenu()">Back</button>
-
-</div>
-
-</div>
-</div>
-
-<script>
-const $ = id => document.getElementById(id);
-function openUpdateTeacher(id, name, dept){
-    hideAll();
-    $("updateTeacher").style.display = "block";
-
-    utid.value = id;
-    utname.value = name;
-    utdept.value = dept;
-}
-
-
-function hideAll(){
-
-
-    ["mainMenu","teacherMenu","studentMenu","addTeacher","viewTeacher","deleteTeacher","addStudent","viewStudent","deleteStudent", "assignSubject","assignClassTeacher","updateTeacher"]
-
-    .forEach(id => $(id).style.display="none");
-}
-
-function goBack(){ hideAll(); $("mainMenu").style.display="block"; }
-function goBackToMain(){
-    hideAll();
-    $("mainMenu").style.display = "block";
-}
-
-function goBackToTeacherMenu(){
-    hideAll();
-    $("teacherMenu").style.display = "block";
-}
-
-function goBackToStudentMenu(){
-    hideAll();
-    $("studentMenu").style.display = "block";
-}
-function showTeacherMenu(){ hideAll(); $("teacherMenu").style.display="block"; }
-function showStudentMenu(){ hideAll(); $("studentMenu").style.display="block"; }
-
-function showAddTeacher(){ hideAll(); $("addTeacher").style.display="block"; }
-function showViewTeacher(){ hideAll(); $("viewTeacher").style.display="block"; loadTeachers(); }
-//function showDeleteTeacher(){ hideAll(); $("deleteTeacher").style.display="block"; loadTeacherDelete(); }
-function showDeleteTeacher(){
-    hideAll();
-    $("deleteTeacher").style.display = "block";
-
-    // ✅ force reload every time
-    deleteList.innerHTML = "";
-    loadTeacherDelete();
-}
-function showAssignSubject(){
-    hideAll();
-    $("assignSubject").style.display = "block";
-    loadAssignTeachers();
-}
-
-function showAddStudent(){ hideAll(); $("addStudent").style.display="block"; }
-function showViewStudent(){ hideAll(); $("viewStudent").style.display="block"; loadStudents(); }
-//function showDeleteStudent(){ hideAll(); $("deleteStudent").style.display="block"; loadStudentDelete(); }
-function showDeleteStudent(){
-    hideAll();
-    $("deleteStudent").style.display = "block";
-
-    // force refresh
-    deleteStudentList.innerHTML = "";
-    loadStudentDelete();
-}
-
-
-/*function saveTeacher(){
-fetch("/add_teacher",{method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({name:tname.value,department:tdept.value,teacher_id:tid.value,password:tpass.value})})
-//.then(r=>r.json()).then(d=>alert(d.message));
-.then(r=>r.json())
-//.then(d=>showAlert(d.message,"green"));
-.then(d => {
-    if(d.status === "success"){
-        showAlert(d.message, "green");
-
-        // optional: clear fields on success
-        tname.value = "";
-        tdept.value = "";
-        tid.value = "";
-        tpass.value = "";
-    } else {
-        showAlert(d.message, "red");
-    }
-});
-
-
-}*/
-function saveTeacher(){
-    const name = tname.value.trim();
-    const dept = tdept.value.trim();
-    const id   = tid.value.trim();
-    const pass = tpass.value.trim();
-
-    /* ✅ 1. EMPTY FIELD CHECK */
-    if(name === "" || dept === "" || id === "" || pass === ""){
-        showAlert("Fill all the fields", "red");
-        return; // ⛔ STOP here
-    }
-
-    /* ✅ 2. CALL BACKEND ONLY IF VALID */
-    fetch("/add_teacher",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
+        /* ✅ 2. CALL BACKEND ONLY IF VALID */
+        fetch("/add_teacher", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             name: name,
             department: dept,
             teacher_id: id,
-             password: pass
+            password: pass,
+          }),
         })
-    })
-    .then(r => r.json())
-    .then(d => {
-        if(d.status === "success"){
-            showAlert(d.message, "green");
-            tname.value = "";
-            tdept.value = "";
-            tid.value = "";
-            tpass.value = "";
-        } else {
-            showAlert(d.message, "green");
-        }
-    });
-}
-
-
-function loadTeachers(){
-fetch("/get_teachers").then(r=>r.json()).then(d=>{
-teacherTable.innerHTML="";
-//d.forEach(t=>teacherTable.innerHTML+=`<tr><td>${t.name}</td><td>${t.department}</td><td>${t.teacher_id}</td></tr>`);
-if(d.length === 0){
-            teacherTable.innerHTML = `
-                <tr>
-                    <td colspan="4" style="text-align:center">No teachers available</td>
-                </tr>
-            `;
-            return;
-        }
-
-d.forEach(t => teacherTable.innerHTML += `
-<tr>
-  <td>${t.name}</td>
-  <td>${t.department}</td>
-  <td>${t.teacher_id}</td>
-  <td>
-    <button class="btn" style="padding:6px"
-      onclick="openUpdateTeacher('${t.teacher_id}','${t.name}','${t.department}')">
-      Edit
-    </button>
-  </td>
-</tr>
-`);
-
-});
-}
-
-function loadTeacherDelete(){
-fetch("/get_teachers").then(r=>r.json()).then(d=>{
-//deleteList.innerHTML="";
-deleteList.innerHTML = `<option disabled selected>Select teacher</option>`;
-
-if(d.length === 0){
-            deleteList.innerHTML = "<option>No teachers available</option>";
-            return;
-        }
-//d.forEach(t=>deleteList.innerHTML+=`<option value="${t.teacher_id}">${t.name}</option>`);
-d.forEach(t => {
-            deleteList.innerHTML +=
-                `<option value="${t.teacher_id}">${t.name}</option>`;
-        });
-});
-}
-
-/*function deleteTeacherData(){
-fetch("/delete_teacher",{method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({teacher_id:deleteList.value})})
-//.then(r=>r.json()).then(d=>alert(d.message));
-.then(r=>r.json())
-.then(d=>showAlert(d.message,"green"));
-
-}*/
-/*function deleteTeacherData(){
-    fetch("/delete_teacher",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ teacher_id: deleteList.value })
-    })
-    .then(r => r.json())
-    .then(d => {
-        showAlert(d.message, "green");
-
-        loadTeacherDelete();   // ✅ refresh dropdown
-        loadTeachers();        // ✅ refresh view table
-    });
-}
-*/
-/*function deleteTeacherData() {
-    const id = deleteList.value?.trim();  // ✅ trim spaces
-
-    if(!id || id === "Select teacher" || id === "No teachers available"){
-        showAlert("No teacher selected", "red");
-        return;
-    }
-
-    showDeleteAlert(
-        "Are you sure you want to delete this teacher?",
-        id
-    );
-
-    fetch("/delete_teacher", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teacher_id: id })
-    })
-    .then(r => r.json())
-    .then(d => {
-        if(d.success){
-            showAlert(d.message, "green");
-
-            // ✅ remove deleted teacher from dropdown
-            deleteList.querySelector(`option[value="${id}"]`)?.remove();
-
-            // ✅ refresh teachers table
-            loadTeachers();
-
-            // ✅ handle empty dropdown
-            if(deleteList.options.length === 1){ // only default option left
-                deleteList.innerHTML = `<option disabled selected>No teachers available</option>`;
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.status === "success") {
+              showAlert(d.message, "green");
+              tname.value = "";
+              tdept.value = "";
+              tid.value = "";
+              tpass.value = "";
+            } else {
+              showAlert(d.message, "green");
             }
-        } else {
-            showAlert(d.message, "red");
+          });
+      }
+
+      function loadTeachers() {
+        fetch("/get_teachers")
+          .then((r) => r.json())
+          .then((d) => {
+            teacherTable.innerHTML = "";
+            //d.forEach(t=>teacherTable.innerHTML+=`<tr><td>${t.name}</td><td>${t.department}</td><td>${t.teacher_id}</td></tr>`);
+            if (d.length === 0) {
+              teacherTable.innerHTML = `
+                      <tr>
+                          <td colspan="4" style="text-align:center">No teachers available</td>
+                      </tr>
+                  `;
+              return;
+            }
+
+            d.forEach(
+              (t) =>
+                (teacherTable.innerHTML += `
+      <tr>
+        <td>${t.name}</td>
+        <td>${t.department}</td>
+        <td>${t.teacher_id}</td>
+        <td>
+          <button class="btn" style="padding:6px"
+            onclick="openUpdateTeacher('${t.teacher_id}','${t.name}','${t.department}')">
+            Edit
+          </button>
+        </td>
+      </tr>
+      `),
+            );
+          });
+      }
+
+      function loadTeacherDelete() {
+        fetch("/get_teachers")
+          .then((r) => r.json())
+          .then((d) => {
+            //deleteList.innerHTML="";
+            deleteList.innerHTML = `<option disabled selected>Select teacher</option>`;
+
+            if (d.length === 0) {
+              deleteList.innerHTML = "<option>No teachers available</option>";
+              return;
+            }
+            //d.forEach(t=>deleteList.innerHTML+=`<option value="${t.teacher_id}">${t.name}</option>`);
+            d.forEach((t) => {
+              deleteList.innerHTML += `<option value="${t.teacher_id}">${t.name}</option>`;
+            });
+          });
+      }
+
+      /*function deleteTeacherData(){
+      fetch("/delete_teacher",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({teacher_id:deleteList.value})})
+      //.then(r=>r.json()).then(d=>alert(d.message));
+      .then(r=>r.json())
+      .then(d=>showAlert(d.message,"green"));
+
+      }*/
+      /*function deleteTeacherData(){
+          fetch("/delete_teacher",{
+              method:"POST",
+              headers:{"Content-Type":"application/json"},
+              body: JSON.stringify({ teacher_id: deleteList.value })
+          })
+          .then(r => r.json())
+          .then(d => {
+              showAlert(d.message, "green");
+
+              loadTeacherDelete();   // ✅ refresh dropdown
+              loadTeachers();        // ✅ refresh view table
+          });
+      }
+      */
+      /*function deleteTeacherData() {
+          const id = deleteList.value?.trim();  // ✅ trim spaces
+
+          if(!id || id === "Select teacher" || id === "No teachers available"){
+              showAlert("No teacher selected", "red");
+              return;
+          }
+
+          showDeleteAlert(
+              "Are you sure you want to delete this teacher?",
+              id
+          );
+
+          fetch("/delete_teacher", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ teacher_id: id })
+          })
+          .then(r => r.json())
+          .then(d => {
+              if(d.success){
+                  showAlert(d.message, "green");
+
+                  // ✅ remove deleted teacher from dropdown
+                  deleteList.querySelector(`option[value="${id}"]`)?.remove();
+
+                  // ✅ refresh teachers table
+                  loadTeachers();
+
+                  // ✅ handle empty dropdown
+                  if(deleteList.options.length === 1){ // only default option left
+                      deleteList.innerHTML = `<option disabled selected>No teachers available</option>`;
+                  }
+              } else {
+                  showAlert(d.message, "red");
+              }
+          })
+          .catch(err => {
+              console.error("Delete error:", err);
+              showAlert("Delete failed", "red");
+          });
+      }
+      */
+      function deleteTeacherData() {
+        const id = deleteList.value?.trim();
+
+        if (!id || id === "Select teacher" || id === "No teachers available") {
+          showAlert("No teacher selected", "red");
+          return;
         }
-    })
-    .catch(err => {
-        console.error("Delete error:", err);
-        showAlert("Delete failed", "red");
-    });
-}
-*/
-function deleteTeacherData() {
-    const id = deleteList.value?.trim();
 
-    if(!id || id === "Select teacher" || id === "No teachers available"){
-        showAlert("No teacher selected", "red");
-        return;
-    }
+        // ✅ ONLY open confirmation popup
+        showDeleteAlert("Are you sure you want to delete this teacher?", id);
+      }
 
-    // ✅ ONLY open confirmation popup
-    showDeleteAlert(
-        "Are you sure you want to delete this teacher?",
-        id
-    );
-}
+      function loadAssignTeachers() {
+        fetch("/api/teachers")
+          .then((r) => r.json())
+          .then((data) => {
+            as_teacher.innerHTML = '<option value="">Select Teacher</option>';
+            data.forEach((t) => {
+              as_teacher.innerHTML += `
+                      <option value="${t.teacher_id}">
+                          ${t.teacher_name} (${t.teacher_id})
+                      </option>`;
+            });
+          });
+      }
 
+      /* Load subjects */
+      function loadAssignSubjects() {
+        if (!as_stream.value || !as_year.value || !as_semester.value) return;
 
-function loadAssignTeachers(){
-    fetch("/api/teachers")
-    .then(r => r.json())
-    .then(data => {
-        as_teacher.innerHTML = '<option value="">Select Teacher</option>';
-        data.forEach(t => {
-            as_teacher.innerHTML += `
-                <option value="${t.teacher_id}">
-                    ${t.teacher_name} (${t.teacher_id})
-                </option>`;
-        });
-    });
-}
+        fetch(
+          `/api/subjects?stream=${as_stream.value}&year=${as_year.value}&semester=${as_semester.value}`,
+        )
+          .then((r) => r.json())
+          .then((data) => {
+            as_subject.innerHTML = '<option value="">Select Subject</option>';
+            data.forEach((s) => {
+              as_subject.innerHTML += `<option value="${s.id}">${s.subject_name}</option>`;
+            });
+          });
+      }
 
-/* Load subjects */
-function loadAssignSubjects(){
-    if(!as_stream.value || !as_year.value || !as_semester.value) return;
+      as_stream.onchange = loadAssignSubjects;
+      as_year.onchange = loadAssignSubjects;
+      as_semester.onchange = loadAssignSubjects;
 
-    fetch(`/api/subjects?stream=${as_stream.value}&year=${as_year.value}&semester=${as_semester.value}`)
-    .then(r => r.json())
-    .then(data => {
-        as_subject.innerHTML = '<option value="">Select Subject</option>';
-        data.forEach(s => {
-            as_subject.innerHTML += `<option value="${s.id}">${s.subject_name}</option>`;
-        });
-    });
-}
+      /* Assign subject */
+      function assignSubject() {
+        /*  if(!as_teacher.value || !as_subject.value){
+              alert("Please select all fields");
+              return;
 
-as_stream.onchange = loadAssignSubjects;
-as_year.onchange = loadAssignSubjects;
-as_semester.onchange = loadAssignSubjects;
+          }
+      */ if (!as_teacher.value || !as_subject.value) {
+          showAlert("Please select all fields");
+          return;
+        }
 
-/* Assign subject */
-function assignSubject(){
-  /*  if(!as_teacher.value || !as_subject.value){
-        alert("Please select all fields");
-        return;
-
-    }
-*/  if(!as_teacher.value || !as_subject.value){
-    showAlert("Please select all fields");
-    return;
-}
-
-
-    fetch("/api/assign-subject",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
+        fetch("/api/assign-subject", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             teacher_id: as_teacher.value,
             subject_id: as_subject.value,
             stream: as_stream.value,
             year: as_year.value,
-            semester: as_semester.value
+            semester: as_semester.value,
+          }),
         })
-    })
-    .then(r=>r.json())
-   // .then(d=>alert(d.message));
-   .then(d=>showAlert(d.message,"green"));
+          .then((r) => r.json())
+          // .then(d=>alert(d.message));
+          .then((d) => {
+            showAlert(d.message, "green");
+            as_teacher.value = "";
+            as_stream.value = "";
+            as_year.value = "";
+            as_semester.value = "";
+            as_subject.innerHTML = '<option value="">Select Subject</option>';
+          });
+      }
+      //assign class teacher
+      function showAssignClassTeacher() {
+        hideAll();
+        $("assignClassTeacher").style.display = "block";
 
+        fetch("/api/teachers")
+          .then((r) => r.json())
+          .then((data) => {
+            ct_teacher.innerHTML = '<option value="">Select Teacher</option>';
+            data.forEach((t) => {
+              ct_teacher.innerHTML += `
+                      <option value="${t.teacher_id}">
+                          ${t.teacher_name}
+                      </option>`;
+            });
+          });
+      }
 
-}
-//assign class teacher
-function showAssignClassTeacher(){
-    hideAll();
-    $("assignClassTeacher").style.display = "block";
+      function assignClassTeacher() {
+        if (
+          !ct_teacher.value ||
+          !ct_stream.value ||
+          !ct_year.value ||
+          !ct_academic_year.value
+        ) {
+          showAlert("Fill all fields", "red");
+          return;
+        }
 
-    fetch("/api/teachers")
-    .then(r => r.json())
-    .then(data => {
-        ct_teacher.innerHTML = '<option value="">Select Teacher</option>';
-        data.forEach(t => {
-            ct_teacher.innerHTML += `
-                <option value="${t.teacher_id}">
-                    ${t.teacher_name}
-                </option>`;
-        });
-    });
-}
-
-function assignClassTeacher(){
-    if(
-        !ct_teacher.value ||
-        !ct_stream.value ||
-        !ct_year.value ||
-        !ct_academic_year.value
-    ){
-        showAlert("Fill all fields", "red");
-        return;
-    }
-
-    fetch("/api/assign-class-teacher",{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({
+        fetch("/api/assign-class-teacher", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             teacher_id: ct_teacher.value,
             stream: ct_stream.value,
             year: ct_year.value,
-            academic_year: ct_academic_year.value
+            academic_year: ct_academic_year.value,
+          }),
         })
-    })
-    .then(r => r.json())
-    .then(d => showAlert(d.message, "green"));
-}
+          .then((r) => r.json())
+          .then((d) => {
+            showAlert(d.message, "green");
+            ct_teacher.value = "";
+            ct_stream.value = "";
+            ct_year.value = "";
+            ct_academic_year.value = "";
+          });
+      }
 
+      function updateTeacher() {
+        const name = utname.value.trim();
+        const dept = utdept.value.trim();
+        const id = utid.value.trim();
 
-function updateTeacher(){
-    const name = utname.value.trim();
-    const dept = utdept.value.trim();
-    const id   = utid.value.trim();
+        if (name === "" || dept === "") {
+          showAlert("Fields cannot be empty");
+          return;
+        }
 
-    if(name === "" || dept === ""){
-        showAlert("Fields cannot be empty");
-        return;
-    }
-
-    fetch("/update_teacher",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
+        fetch("/update_teacher", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             name: name,
             department: dept,
-            teacher_id: id
+            teacher_id: id,
+          }),
         })
-    })
-    .then(r => r.json())
-    .then(d => {
-        showAlert(d.message, "green");
-        showViewTeacher(); // reload table
-    });
-}
+          .then((r) => r.json())
+          .then((d) => {
+            showAlert(d.message, "green");
+            showViewTeacher(); // reload table
+          });
+      }
 
+      /*function saveStudent(){
 
-/*function saveStudent(){
+      fetch("/add_student",{method:"POST",headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+          name: sname.value,
+          department: sdept.value,
+          year: syear.value,
+          roll_no: sroll.value,
+          password: spass.value
+      })
+      })
+      //.then(r=>r.json()).then(d=>alert(d.message));
+      .then(r=>r.json())
+      .then(d=>showAlert(d.message,"green"));
 
-fetch("/add_student",{method:"POST",headers:{"Content-Type":"application/json"},
-body: JSON.stringify({
-    name: sname.value,
-    department: sdept.value,
-    year: syear.value,
-    roll_no: sroll.value,
-    password: spass.value
-})
-})
-//.then(r=>r.json()).then(d=>alert(d.message));
-.then(r=>r.json())
-.then(d=>showAlert(d.message,"green"));
+      }
+      */
+      function saveStudent() {
+        const name = sname.value.trim();
+        const dept = sdept.value.trim();
+        const year = syear.value.trim();
+        const roll = sroll.value.trim();
+        const pass = spass.value.trim();
 
-}
-*/
-function saveStudent(){
-    const name = sname.value.trim();
-    const dept = sdept.value.trim();
-    const year = syear.value.trim();
-    const roll = sroll.value.trim();
-    const pass = spass.value.trim();
+        // ✅ FRONTEND VALIDATION
+        if (
+          name === "" ||
+          dept === "" ||
+          year === "" ||
+          roll === "" ||
+          pass === ""
+        ) {
+          showAlert("Fill all the fields", "red");
+          return; // ⛔ STOP execution
+        }
 
-    // ✅ FRONTEND VALIDATION
-    if(name === "" || dept === "" || year === "" || roll === "" || pass === ""){
-        showAlert("Fill all the fields", "red");
-        return; // ⛔ STOP execution
-    }
-
-    fetch("/add_student",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
+        fetch("/add_student", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             name: name,
             department: dept,
             year: year,
             roll_no: roll,
-            password: pass
+            password: pass,
+          }),
         })
-    })
-    .then(r => r.json())
-    .then(d => {
-        if(d.status === "success"){
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.status === "success") {
+              showAlert(d.message, "green");
+
+              // clear form
+              sname.value = "";
+              sdept.value = "";
+              syear.value = "";
+              sroll.value = "";
+              spass.value = "";
+            } else {
+              showAlert(d.message, "red");
+            }
+          });
+      }
+
+      function loadStudents() {
+        fetch("/get_students")
+          .then((r) => r.json())
+          .then((d) => {
+            studentTable.innerHTML = "";
+            if (d.length === 0) {
+              studentTable.innerHTML = `
+                      <tr>
+                          <td colspan="3" style="text-align:center">No students available</td>
+                      </tr>
+                  `;
+              return;
+            }
+            d.forEach(
+              (s) =>
+                (studentTable.innerHTML += `<tr><td>${s.department}</td><td>${s.year}</td><td>${s.roll_no}</td></tr>`),
+            );
+          });
+      }
+
+      function loadStudentDelete() {
+        fetch("/get_students")
+          .then((r) => r.json())
+          .then((d) => {
+            deleteStudentList.innerHTML = "";
+            if (d.length === 0) {
+              deleteStudentList.innerHTML =
+                "<option>No students available</option>";
+              return;
+            }
+            d.forEach(
+              (s) =>
+                (deleteStudentList.innerHTML += `<option value="${s.roll_no}">${s.roll_no}</option>`),
+            );
+          });
+      }
+
+      /*function deleteStudentData(){
+      fetch("/delete_student",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({roll_no:deleteStudentList.value})})
+      //.then(r=>r.json()).then(d=>alert(d.message));
+      .then(r=>r.json())
+      .then(d=>showAlert(d.message,"green"));
+
+      }*/
+      function deleteStudentData() {
+        const roll = deleteStudentList.value;
+
+        if (!roll) {
+          showAlert("No student selected", "red");
+          return;
+        }
+
+        fetch("/delete_student", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ roll_no: roll }),
+        })
+          .then((r) => r.json())
+          .then((d) => {
             showAlert(d.message, "green");
 
-            // clear form
-            sname.value = "";
-            sdept.value = "";
-            syear.value = "";
-            sroll.value = "";
-            spass.value = "";
-        } else {
-            showAlert(d.message, "red");
-        }
-    });
+            // ✅ FORCE REFRESH (same as teacher)
+            deleteStudentList.innerHTML = "";
+            loadStudentDelete();
+            loadStudents();
+          });
+      }
 
+      hideAll();
+      $("mainMenu").style.display = "block";
+      /* function showAlert(msg){
+          document.getElementById("alertText").innerText = msg;
+          document.getElementById("customAlert").style.display = "flex";
+      } */
+      /*function showAlert(msg, color="red"){
+          const t = document.getElementById("alertText");
+          t.style.color = "";
+          t.innerText = msg;
+          t.style.color = color ;
+          document.getElementById("customAlert").style.display = "flex";
+      }*/
+      function showAlert(msg, color = "red") {
+        const t = document.getElementById("alertText");
 
-}
+        t.innerText = msg;
 
-function loadStudents(){
-fetch("/get_students").then(r=>r.json()).then(d=>{
-studentTable.innerHTML="";
-if(d.length === 0){
-            studentTable.innerHTML = `
-                <tr>
-                    <td colspan="3" style="text-align:center">No students available</td>
-                </tr>
-            `;
-            return;
-        }
-d.forEach(s=>studentTable.innerHTML+=`<tr><td>${s.department}</td><td>${s.year}</td><td>${s.roll_no}</td></tr>`);
-});
-}
+        // 🔥 FORCE COLOR (cannot be overridden)
+        t.style.setProperty("color", color, "important");
 
-function loadStudentDelete(){
-fetch("/get_students").then(r=>r.json()).then(d=>{
-deleteStudentList.innerHTML="";
-if(d.length === 0){
-            deleteStudentList.innerHTML =
-                "<option>No students available</option>";
-            return;
-        }
-d.forEach(s=>deleteStudentList.innerHTML+=`<option value="${s.roll_no}">${s.roll_no}</option>`);
-});
-}
+        document.getElementById("customAlert").style.display = "flex";
+      }
 
-/*function deleteStudentData(){
-fetch("/delete_student",{method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({roll_no:deleteStudentList.value})})
-//.then(r=>r.json()).then(d=>alert(d.message));
-.then(r=>r.json())
-.then(d=>showAlert(d.message,"green"));
+      function closeAlert() {
+        document.getElementById("customAlert").style.display = "none";
+      }
+    </script>
+    <!-- Custom Alert Box -->
+    <div
+      id="customAlert"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      "
+    >
+      <div
+        style="
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          text-align: center;
+          min-width: 280px;
+        "
+      >
+        <!--<p id="alertText"></p>-->
+        <!--<p id="alertText" style="color:red; font-size:16px;"></p>-->
+        <p id="alertText" style="font-size: 16px"></p>
 
-}*/
-function deleteStudentData(){
-    const roll = deleteStudentList.value;
-
-    if(!roll){
-        showAlert("No student selected", "red");
-        return;
-    }
-
-    fetch("/delete_student",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ roll_no: roll })
-    })
-    .then(r => r.json())
-    .then(d => {
-        showAlert(d.message, "green");
-
-        // ✅ FORCE REFRESH (same as teacher)
-        deleteStudentList.innerHTML = "";
-        loadStudentDelete();
-        loadStudents();
-    });
-}
-
-
-hideAll(); $("mainMenu").style.display="block";
-/* function showAlert(msg){
-    document.getElementById("alertText").innerText = msg;
-    document.getElementById("customAlert").style.display = "flex";
-} */
-/*function showAlert(msg, color="red"){
-    const t = document.getElementById("alertText");
-    t.style.color = "";
-    t.innerText = msg;
-    t.style.color = color ;
-    document.getElementById("customAlert").style.display = "flex";
-}*/
-function showAlert(msg, color = "red"){
-    const t = document.getElementById("alertText");
-
-    t.innerText = msg;
-
-    // 🔥 FORCE COLOR (cannot be overridden)
-    t.style.setProperty("color", color, "important");
-
-    document.getElementById("customAlert").style.display = "flex";
-}
-
-
-
-function closeAlert(){
-    document.getElementById("customAlert").style.display = "none";
-}
-
-</script>
-<!-- Custom Alert Box -->
-<div id="customAlert" style="
-display:none;
-position:fixed;
-top:0; left:0;
-width:100%; height:100%;
-background:rgba(0,0,0,0.4);
-justify-content:center;
-align-items:center;
-z-index:9999;
-">
-  <div style="
-  background:white;
-  padding:20px;
-  border-radius:8px;
-  text-align:center;
-  min-width:280px;
-  ">
-    <!--<p id="alertText"></p>-->
-    <!--<p id="alertText" style="color:red; font-size:16px;"></p>-->
-    <p id="alertText" style="font-size:16px;"></p>
-
-
-
-    <button onclick="closeAlert()" class="btn">OK</button>
-  </div>
-</div>
-<div id="showAlert" class="alert-overlay">
-  <div class="alert-box">
-    <p id="alertMessage"></p>
-    <div class="alert-buttons">
-      <button id="alertOk">OK</button>
-      <button id="alertCancel">Cancel</button>
+        <button onclick="closeAlert()" class="btn">OK</button>
+      </div>
     </div>
-  </div>
-</div>
+    <div id="showAlert" class="alert-overlay">
+      <div class="alert-box">
+        <p id="alertMessage"></p>
+        <div class="alert-buttons">
+          <button id="alertOk">OK</button>
+          <button id="alertCancel">Cancel</button>
+        </div>
+      </div>
+    </div>
 
-<script>
-let selectedTeacherId = null;
+    <script>
+      let selectedTeacherId = null;
 
-function showDeleteAlert(message, teacherId) {
-  selectedTeacherId = teacherId;
-  document.getElementById("alertMessage").innerText = message;
-  document.getElementById("showAlert").style.display = "block";
-}
+      function showDeleteAlert(message, teacherId) {
+        selectedTeacherId = teacherId;
+        document.getElementById("alertMessage").innerText = message;
+        document.getElementById("showAlert").style.display = "block";
+      }
 
-function closeDeleteAlert() {
-  document.getElementById("showAlert").style.display = "none";
-}
+      function closeDeleteAlert() {
+        document.getElementById("showAlert").style.display = "none";
+      }
 
-document.getElementById("alertCancel").onclick = closeDeleteAlert;
+      document.getElementById("alertCancel").onclick = closeDeleteAlert;
 
+      document.getElementById("alertOk").onclick = function () {
+        fetch("/delete_teacher", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ teacher_id: selectedTeacherId }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            closeDeleteAlert();
 
-document.getElementById("alertOk").onclick = function () {
-  fetch("/delete_teacher", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ teacher_id: selectedTeacherId })
-  })
-  .then(res => res.json())
-  .then(data => {
-    closeDeleteAlert();
+            if (data.status === "success") {
+              showAlert(data.message, "green");
+            } else {
+              showAlert(data.message, "red");
+            }
 
-    if(data.status === "success"){
-        showAlert(data.message, "green");
-    } else {
-        showAlert(data.message, "red");
-    }
-
-    loadTeacherDelete();
-    loadTeachers();
-});
-
-};
-</script>
-
-</body>
+            loadTeacherDelete();
+            loadTeachers();
+          });
+      };
+    </script>
+  </body>
 </html>
