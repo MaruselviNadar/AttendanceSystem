@@ -221,11 +221,25 @@
           <label>Name</label>
           <input id="utname" />
 
+<<<<<<< HEAD
           <label>Department</label>
           <select id="utdept">
             <option>CS</option>
             <option>IT</option>
           </select>
+=======
+<!-- ADD TEACHER -->
+<div id="addTeacher" class="section">
+    <h2>Add Teacher</h2>
+    <label>Name</label><input id="tname">
+    <label>Department</label>
+    <select id="tdept"><option value="">Select Department</option><option>Computer Science</option><option>Information Technology</option></select>
+    <label>Teacher ID</label><input id="tid">
+    <label>Password</label><input type="password" id="tpass">
+    <button class="btn" onclick="saveTeacher()">Save</button>
+    <!--<button class="btn back" onclick="goBack()">Back</button>-->
+    <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+>>>>>>> 7fc1bb6e1c089bad8c763eb5933d6d6224a84e54
 
           <label>Teacher ID</label>
           <input id="utid" readonly class="highlight-id" />
@@ -520,11 +534,229 @@
           return; // ⛔ STOP here
         }
 
+<<<<<<< HEAD
         /* ✅ 2. CALL BACKEND ONLY IF VALID */
         fetch("/add_teacher", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+=======
+    <label>Teacher</label>
+    <select id="as_teacher"></select>
+
+    <label>Stream</label>
+    <select id="as_stream">
+        <option value="">Select</option>
+        <option value="IT">Information Technology</option>
+        <option value="CS">Computer Science</option>
+    </select>
+
+    <label>Year</label>
+    <select id="as_year">
+        <option value="">Select</option>
+        <option value="1">First Year</option>
+        <option value="2">Second Year</option>
+        <option value="3">Third Year</option>
+    </select>
+
+    <label>Semester</label>
+    <select id="as_semester">
+        <option value="">Select</option>
+        <option value="1">Sem I</option>
+        <option value="2">Sem II</option>
+        <option value="3">Sem III</option>
+        <option value="4">Sem IV</option>
+        <option value="5">Sem V</option>
+        <option value="6">Sem VI</option>
+    </select>
+
+    <label>Subject</label>
+    <select id="as_subject"></select>
+
+    <button class="btn" onclick="assignSubject()">Assign</button>
+   <!-- <button class="btn back" onclick="goBack()">Back</button>-->
+    <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+
+</div>
+<!-- ASSIGN CLASS TEACHER -->
+<div id="assignClassTeacher" class="section">
+    <h2>Assign Class Teacher</h2>
+
+    <label>Teacher</label>
+    <select id="ct_teacher"></select>
+
+    <label>Stream</label>
+    <select id="ct_stream">
+        <option value="">Select</option>
+        <option value="BSCIT">Information Technology</option>
+        <option value="CS">Computer Science</option>
+    </select>
+
+    <label>Year</label>
+    <select id="ct_year">
+        <option value="">Select</option>
+        <option value="1">First Year</option>
+        <option value="2">Second Year</option>
+        <option value="3">Third Year</option>
+    </select>
+
+    <label>Academic Year</label>
+    <input id="ct_academic_year">
+
+    <button class="btn" onclick="assignClassTeacher()">Assign</button>
+    <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+</div>
+
+<!-- ADD STUDENT -->
+<div id="addStudent" class="section">
+    <h2>Add Student</h2>
+    <label>Student Name</label>
+    <input id="sname">
+    <label>Department</label>
+    <select id="sdept"><option value="">Select Department</option><option value="CS">Computer Science</option><option value="BSCIT">Information Technology</option></select>
+    <label>Year</label>
+    <select id="syear"><option value="">Select Year</option><option>First Year</option><option>Second Year</option><option>Third Year</option></select>
+    <label>Roll No</label><input id="sroll">
+    <label>Password</label><input type="password" id="spass">
+    <button class="btn" onclick="saveStudent()">Save</button>
+    <!--<button class="btn back" onclick="goBack()">Back</button>-->
+    <button class="btn back" onclick="goBackToStudentMenu()">Back</button>
+
+</div>
+
+<!-- VIEW STUDENTS -->
+<div id="viewStudent" class="section">
+    <h2>Students</h2>
+    <table>
+        <thead><tr><th>Dept</th><th>Year</th><th>Roll</th></tr></thead>
+        <tbody id="studentTable"></tbody>
+    </table>
+   <!-- <button class="btn back" onclick="goBack()">Back</button>-->
+    <button class="btn back" onclick="goBackToStudentMenu()">Back</button>
+
+</div>
+
+<!-- DELETE STUDENT -->
+<div id="deleteStudent" class="section">
+    <h2>Delete Student</h2>
+    <select id="deleteStudentList"></select>
+    <button class="btn" onclick="deleteStudentData()">Delete</button>
+  <!--  <button class="btn back" onclick="goBack()">Back</button>-->
+    <button class="btn back" onclick="goBackToStudentMenu()">Back</button>
+
+</div>
+
+</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+function openUpdateTeacher(id, name, dept){
+    hideAll();
+    $("updateTeacher").style.display = "block";
+
+    utid.value = id;
+    utname.value = name;
+    utdept.value = dept;
+}
+
+
+function hideAll(){
+
+
+    ["mainMenu","teacherMenu","studentMenu","addTeacher","viewTeacher","deleteTeacher","addStudent","viewStudent","deleteStudent", "assignSubject","assignClassTeacher","updateTeacher"]
+
+    .forEach(id => $(id).style.display="none");
+}
+
+function goBack(){ hideAll(); $("mainMenu").style.display="block"; }
+function goBackToMain(){
+    hideAll();
+    $("mainMenu").style.display = "block";
+}
+
+function goBackToTeacherMenu(){
+    hideAll();
+    $("teacherMenu").style.display = "block";
+}
+
+function goBackToStudentMenu(){
+    hideAll();
+    $("studentMenu").style.display = "block";
+}
+function showTeacherMenu(){ hideAll(); $("teacherMenu").style.display="block"; }
+function showStudentMenu(){ hideAll(); $("studentMenu").style.display="block"; }
+
+function showAddTeacher(){ hideAll(); $("addTeacher").style.display="block"; }
+function showViewTeacher(){ hideAll(); $("viewTeacher").style.display="block"; loadTeachers(); }
+//function showDeleteTeacher(){ hideAll(); $("deleteTeacher").style.display="block"; loadTeacherDelete(); }
+function showDeleteTeacher(){
+    hideAll();
+    $("deleteTeacher").style.display = "block";
+
+    // ✅ force reload every time
+    deleteList.innerHTML = "";
+    loadTeacherDelete();
+}
+function showAssignSubject(){
+    hideAll();
+    $("assignSubject").style.display = "block";
+    loadAssignTeachers();
+}
+
+function showAddStudent(){ hideAll(); $("addStudent").style.display="block"; }
+function showViewStudent(){ hideAll(); $("viewStudent").style.display="block"; loadStudents(); }
+//function showDeleteStudent(){ hideAll(); $("deleteStudent").style.display="block"; loadStudentDelete(); }
+function showDeleteStudent(){
+    hideAll();
+    $("deleteStudent").style.display = "block";
+
+    // force refresh
+    deleteStudentList.innerHTML = "";
+    loadStudentDelete();
+}
+
+
+/*function saveTeacher(){
+fetch("/add_teacher",{method:"POST",headers:{"Content-Type":"application/json"},
+body:JSON.stringify({name:tname.value,department:tdept.value,teacher_id:tid.value,password:tpass.value})})
+//.then(r=>r.json()).then(d=>alert(d.message));
+.then(r=>r.json())
+//.then(d=>showAlert(d.message,"green"));
+.then(d => {
+    if(d.status === "success"){
+        showAlert(d.message, "green");
+
+        // optional: clear fields on success
+        tname.value = "";
+        tdept.value = "";
+        tid.value = "";
+        tpass.value = "";
+    } else {
+        showAlert(d.message, "red");
+    }
+});
+
+
+}*/
+function saveTeacher(){
+    const name = tname.value.trim();
+    const dept = tdept.value.trim();
+    const id   = tid.value.trim();
+    const pass = tpass.value.trim();
+
+    /* ✅ 1. EMPTY FIELD CHECK */
+    if(name === "" || dept === "" || id === "" || pass === ""){
+        showAlert("Fill all the fields", "red");
+        return; // ⛔ STOP here
+    }
+
+    /* ✅ 2. CALL BACKEND ONLY IF VALID */
+    fetch("/add_teacher",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+>>>>>>> 7fc1bb6e1c089bad8c763eb5933d6d6224a84e54
             name: name,
             department: dept,
             teacher_id: id,
