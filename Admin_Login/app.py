@@ -297,6 +297,64 @@ def assign_class_teacher():
       cursor.close()
       db.close()
 
+# ---------- ADD SUBJECT ----------
+@app.route("/add_subject", methods=["POST"])
+def add_subject():
+    if not session.get("admin_logged_in"):
+        return jsonify({
+            "status": "fail",
+            "message": "Unauthorized"
+        }), 401
+
+    data = request.json
+
+    # ✅ Field validation
+    if (not data.get("subject_name") or not data.get("stream")
+        or not data.get("year") or not data.get("semester")):
+        return jsonify({
+            "status": "fail",
+            "message": "Fill all the fields"
+        })
+
+    try:
+        year = int(data["year"])
+        semester = int(data["semester"])
+    except ValueError:
+        return jsonify({
+            "status": "fail",
+            "message": "Year and Semester must be numbers"
+        })
+
+    db = get_db_connection()
+    cursor = db.cursor()
+
+    try:
+        cursor.execute("""
+            INSERT INTO subjects (subject_name, stream, year, semester)
+            VALUES (%s, %s, %s, %s)
+        """, (
+            data["subject_name"],
+            data["stream"],
+            year,        # ✅ int
+            semester     # ✅ int
+        ))
+        db.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Subject added successfully"
+        })
+
+    except mysql.connector.Error as e:
+        print("Add subject error:", e)  # 👈 helpful for debugging
+        return jsonify({
+            "status": "fail",
+            "message": "Error adding subject"
+        })
+
+    finally:
+        cursor.close()
+        db.close()
 
 
 

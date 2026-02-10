@@ -31,7 +31,7 @@ def get_db_connection(autocommit=False):
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="123456",
+        password="root",
         database="teacher",
         autocommit=autocommit,
     )

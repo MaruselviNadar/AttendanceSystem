@@ -180,6 +180,8 @@
           <button class="btn" onclick="showAssignClassTeacher()">
             Assign Class Teacher
           </button>
+          <button class="btn" onclick="showAddSubject()">Add Subject</button>
+
 
           <button class="btn back" onclick="goBack()">Back</button>
         </div>
@@ -203,8 +205,8 @@
           <label>Department<span class="required">*</span></label>
           <select id="tdept" required>
             <option value="">Select Department</option>
-            <option>CS</option>
-            <option>IT</option>
+            <option value="CS">Computer Science</option>
+            <option value="BSCIT">Information Technology</option>
           </select>
           <label>Teacher ID<span class="required">*</span></label
           ><input id="tid" />
@@ -223,8 +225,8 @@
 
           <label>Department</label>
           <select id="utdept">
-            <option>CS</option>
-            <option>IT</option>
+            <option>Computer Science</option>
+            <option>Information Technology</option>
           </select>
 
           <label>Teacher ID</label>
@@ -241,7 +243,7 @@
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Dept</th>
+                <th>Department</th>
                 <th>ID</th>
               </tr>
             </thead>
@@ -276,8 +278,8 @@
           <label>Stream<span class="required">*</span></label>
           <select id="as_stream" required>
             <option value="">Select</option>
-            <option value="IT">IT</option>
-            <option value="CS">CS</option>
+            <option value="BSCIT">Information Technology</option>
+            <option value="CS">Computer Science</option>
           </select>
 
           <label>Year<span class="required">*</span></label>
@@ -291,12 +293,12 @@
           <label>Semester<span class="required">*</span></label>
           <select id="as_semester" required>
             <option value="">Select</option>
-            <option value="1">Sem 1</option>
-            <option value="2">Sem 2</option>
-            <option value="3">Sem 3</option>
-            <option value="4">Sem 4</option>
-            <option value="5">Sem 5</option>
-            <option value="6">Sem 6</option>
+            <option value="1">Sem I</option>
+            <option value="2">Sem II</option>
+            <option value="3">Sem III</option>
+            <option value="4">Sem IV</option>
+            <option value="5">Sem V</option>
+            <option value="6">Sem VI</option>
           </select>
 
           <label>Subject<span class="required">*</span></label>
@@ -315,23 +317,63 @@
 
           <label>Stream<span class="required">*</span></label>
           <select id="ct_stream" required>
-            <option value="BSCIT">IT</option>
-            <option value="CS">CS</option>
+            <option value="">Select</option>
+            <option value="BSCIT">Information Technology</option>
+            <option value="CS">Computer Science</option>
           </select>
 
           <label>Year<span class="required">*</span></label>
           <select id="ct_year" required>
+            <option value="">Select</option>
             <option value="1">First Year</option>
             <option value="2">Second Year</option>
             <option value="3">Third Year</option>
           </select>
 
           <label>Academic Year<span class="required">*</span></label>
-          <input id="ct_academic_year" placeholder="2024-25" required />
+          <input id="ct_academic_year" required />
 
           <button class="btn" onclick="assignClassTeacher()">Assign</button>
           <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
         </div>
+
+        <!-- ADD SUBJECT -->
+        <div id="addSubject" class="section">
+  <h2>Add Subject</h2>
+
+  <label>Subject Name<span class="required">*</span></label>
+  <input id="sub_name" />
+
+  <label>Stream<span class="required">*</span></label>
+  <select id="sub_stream">
+    <option value="">Select</option>
+    <option value="BSCIT">Information Technology</option>
+    <option value="CS">Computer Science</option>
+  </select>
+
+  <label>Year<span class="required">*</span></label>
+  <select id="sub_year">
+    <option value="">Select</option>
+    <option value="1">First Year</option>
+    <option value="2">Second Year</option>
+    <option value="3">Third Year</option>
+  </select>
+
+  <label>Semester<span class="required">*</span></label>
+  <select id="sub_semester">
+    <option value="">Select</option>
+    <option value="1">Sem I</option>
+    <option value="2">Sem II</option>
+    <option value="3">Sem III</option>
+    <option value="4">Sem IV</option>
+    <option value="5">Sem V</option>
+    <option value="6">Sem VI</option>
+  </select>
+
+  <button class="btn" onclick="saveSubject()">Save</button>
+  <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+</div>
+
 
         <!-- ADD STUDENT -->
         <div id="addStudent" class="section">
@@ -341,15 +383,15 @@
           <label>Department<span class="required">*</span></label>
           <select id="sdept" required>
             <option value="">Select Department</option>
-            <option value="CS">CS</option>
-            <option value="BSCIT">IT</option>
+            <option value="CS">Computer Science</option>
+            <option value="BSCIT">Information Technology</option>
           </select>
           <label>Year<span class="required">*</span></label>
           <select id="syear" required>
             <option value="">Select Year</option>
-            <option>1</option>
-            <option>2</option>
-            <option>3</option>
+            <option>First Year</option>
+            <option>Second Year</option>
+            <option>Third Year</option>
           </select>
           <label>Roll No<span class="required">*</span></label
           ><input id="sroll" required />
@@ -366,9 +408,9 @@
           <table>
             <thead>
               <tr>
-                <th>Dept</th>
+                <th>Department</th>
                 <th>Year</th>
-                <th>Roll</th>
+                <th>Roll no.</th>
               </tr>
             </thead>
             <tbody id="studentTable"></tbody>
@@ -414,6 +456,7 @@
           "deleteStudent",
           "assignSubject",
           "assignClassTeacher",
+          "addSubject",
           "updateTeacher",
         ].forEach((id) => ($(id).style.display = "none"));
       }
@@ -468,6 +511,12 @@
         $("assignSubject").style.display = "block";
         loadAssignTeachers();
       }
+
+      function showAddSubject() {
+  hideAll();
+  $("addSubject").style.display = "block";
+}
+
 
       function showAddStudent() {
         hideAll();
@@ -824,6 +873,42 @@
             showViewTeacher(); // reload table
           });
       }
+
+
+      //add subject
+      function saveSubject() {
+  const name = sub_name.value.trim();
+  const stream = sub_stream.value;
+  const year = sub_year.value;
+  const semester = sub_semester.value;
+
+  if (!name || !stream || !year || !semester) {
+    showAlert("Fill all the fields", "red");
+    return;
+  }
+
+  fetch("/add_subject", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      subject_name: name,
+      stream: stream,
+      year: year,
+      semester: semester,
+    }),
+  })
+    .then((r) => r.json())
+    .then((d) => {
+      showAlert(d.message, d.status === "success" ? "green" : "red");
+
+      if (d.status === "success") {
+        sub_name.value = "";
+        sub_stream.value = "";
+        sub_year.value = "";
+        sub_semester.value = "";
+      }
+    });
+}
 
       /*function saveStudent(){
 
