@@ -9,7 +9,7 @@ def get_db_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="123456",  # Change to your MySQL password
+        password="root",  # Change to your MySQL password
         database="teacher"
     )
 
@@ -380,14 +380,24 @@ def get_students():
 
 @app.route("/delete_student", methods=["POST"])
 def delete_student():
+    if not session.get("admin_logged_in"):
+        return jsonify({"message": "Unauthorized"}), 401
+
     data = request.json
+    roll_no = data.get("roll_no")
+
+    if not roll_no:
+        return jsonify({"message": "Invalid request"})
+
     db = get_db_connection()
     cursor = db.cursor()
-    cursor.execute("DELETE FROM students WHERE roll_no=%s", (data["roll_no"],))
+    cursor.execute("DELETE FROM students WHERE roll_no=%s", (roll_no,))
     db.commit()
     cursor.close()
     db.close()
+
     return jsonify({"message": "Student deleted successfully"})
+
 
 # ---------- RUN ----------
 if __name__ == "__main__":

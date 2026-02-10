@@ -389,6 +389,8 @@
     </div>
 
     <script>
+      let selectedStudentRoll = null;
+
       const $ = (id) => document.getElementById(id);
       function openUpdateTeacher(id, name, dept) {
         hideAll();
@@ -663,17 +665,22 @@
           });
       }
       */
-      function deleteTeacherData() {
-        const id = deleteList.value?.trim();
+      function deleteStudentData() {
+  const roll = deleteStudentList.value;
 
-        if (!id || id === "Select teacher" || id === "No teachers available") {
-          showAlert("No teacher selected", "red");
-          return;
-        }
+  if (!roll) {
+    showAlert("No student selected", "red");
+    return;
+  }
 
-        // ✅ ONLY open confirmation popup
-        showDeleteAlert("Are you sure you want to delete this teacher?", id);
-      }
+  selectedStudentRoll = roll;
+
+  showDeleteAlert(
+    "Do you really want to delete this student?",
+    roll
+  );
+}
+
 
       function loadAssignTeachers() {
         fetch("/api/teachers")
@@ -928,28 +935,21 @@
 
       }*/
       function deleteStudentData() {
-        const roll = deleteStudentList.value;
+  const roll = deleteStudentList.value;
 
-        if (!roll) {
-          showAlert("No student selected", "red");
-          return;
-        }
+  if (!roll) {
+    showAlert("No student selected", "red");
+    return;
+  }
 
-        fetch("/delete_student", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ roll_no: roll }),
-        })
-          .then((r) => r.json())
-          .then((d) => {
-            showAlert(d.message, "green");
+  selectedStudentRoll = roll;
 
-            // ✅ FORCE REFRESH (same as teacher)
-            deleteStudentList.innerHTML = "";
-            loadStudentDelete();
-            loadStudents();
-          });
-      }
+  showDeleteAlert(
+    "Do you really want to delete this student?",
+    roll
+  );
+}
+
 
       hideAll();
       $("mainMenu").style.display = "block";
@@ -1037,25 +1037,52 @@
       document.getElementById("alertCancel").onclick = closeDeleteAlert;
 
       document.getElementById("alertOk").onclick = function () {
-        fetch("/delete_teacher", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ teacher_id: selectedTeacherId }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            closeDeleteAlert();
 
-            if (data.status === "success") {
-              showAlert(data.message, "green");
-            } else {
-              showAlert(data.message, "red");
-            }
+  // 🔵 STUDENT DELETE
+  if (selectedStudentRoll) {
+    fetch("/delete_student", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roll_no: selectedStudentRoll }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        closeDeleteAlert();
 
-            loadTeacherDelete();
-            loadTeachers();
-          });
-      };
+        showAlert(data.message, "green");
+
+        selectedStudentRoll = null;
+        loadStudentDelete();
+        loadStudents();
+      });
+
+    return;
+  }
+
+  // 🔵 TEACHER DELETE
+  if (selectedTeacherId) {
+    fetch("/delete_teacher", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teacher_id: selectedTeacherId }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        closeDeleteAlert();
+
+        if (data.status === "success") {
+          showAlert(data.message, "green");
+        } else {
+          showAlert(data.message, "red");
+        }
+
+        selectedTeacherId = null;
+        loadTeacherDelete();
+        loadTeachers();
+      });
+  }
+};
+
     </script>
   </body>
 </html>
