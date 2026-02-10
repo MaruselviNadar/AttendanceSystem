@@ -225,8 +225,8 @@
 
           <label>Department</label>
           <select id="utdept">
-            <option>Computer Science</option>
-            <option>Information Technology</option>
+            <option value="CS">Computer Science</option>
+            <option value="BSCIT">Information Technology</option>
           </select>
 
           <label>Teacher ID</label>
@@ -714,21 +714,20 @@
           });
       }
       */
-      function deleteStudentData() {
-  const roll = deleteStudentList.value;
 
-  if (!roll) {
-    showAlert("No student selected", "red");
-    return;
-  }
+      function deleteTeacherData() {
+        const id = deleteList.value?.trim();
 
-  selectedStudentRoll = roll;
+        if (!id || id === "Select teacher" || id === "No teachers available") {
+          showAlert("No teacher selected", "red");
+          return;
+        }
 
-  showDeleteAlert(
-    "Do you really want to delete this student?",
-    roll
-  );
-}
+        // ✅ ONLY open confirmation popup
+        showDeleteAlert("Are you sure you want to delete this teacher?", id);
+      }
+
+      
 
 
       function loadAssignTeachers() {
@@ -1019,6 +1018,8 @@
       .then(d=>showAlert(d.message,"green"));
 
       }*/
+
+      //delete Student 
       function deleteStudentData() {
   const roll = deleteStudentList.value;
 
