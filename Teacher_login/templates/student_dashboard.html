@@ -92,6 +92,53 @@
         .btn:hover {
             background: #003080;
         }
+        /* 🔴 MODAL BACKGROUND */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+/* 🔴 MODAL BOX */
+.modal-box {
+    background: linear-gradient(to right, #ff4b2b, #ff416c);
+    padding: 25px 30px;
+    border-radius: 15px;
+    text-align: center;
+    color: white;
+    width: 320px;
+}
+
+/* BUTTONS */
+.modal-buttons {
+    margin-top: 15px;
+}
+
+.modal-buttons button {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 6px;
+    margin: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.yes-btn {
+    background: white;
+    color: #ff416c;
+}
+
+.no-btn {
+    background: #f1f1f1;
+}
+
     </style>
 </head>
 
@@ -101,7 +148,19 @@
 
         <!-- ✅ LOGOUT -->
         <a href="#" id="logoutBtn" class="logout-btn">Logout</a>
+        <!-- 🔴 Logout Confirmation Modal -->
+        <div id="logoutModal" class="modal">
+        <div class="modal-box">
+        <h3>Do you really want to logout?</h3>
+        <div class="modal-buttons">
+            <button id="confirmYes" class="yes-btn">Yes</button>
+            <button id="confirmNo" class="no-btn">No</button>
+        </div>
+      </div>
+     </div>
 
+         
+         
         <img src="/static/sieslogo.jpg" alt="College Logo" class="logo">
 
         <h2 id="welcomeText">Welcome, Student</h2>
@@ -112,12 +171,15 @@
         <div id="errorMsg" style="display: none; color: #dc3545; margin-bottom: 10px; font-weight: bold;"></div>
 
         <div class="card" id="studentCard">
+            <p>👤 Name: <span id="name">...</span></p>
             <p>📘 Department: <span id="department">...</span></p>
             <p>🎓 Year: <span id="year">...</span></p>
             <p>🆔 Roll Number: <span id="roll_no">...</span></p>
         </div>
 
         <a href="/graph" class="btn">View Attendance</a>
+        
+        </div
 
     </div>
 
@@ -145,7 +207,8 @@
                 }
                 const data = await response.json();
 
-                document.getElementById('welcomeText').textContent = `Welcome`;
+                document.getElementById('welcomeText').textContent = `Welcome ${data.name}`;
+                document.getElementById('name').textContent =data.name;
                 document.getElementById('department').textContent = data.department;
                 document.getElementById('year').textContent = data.year;
                 document.getElementById('roll_no').textContent = data.roll_no;
@@ -160,29 +223,41 @@
             }
         });
 
-        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            const logoutBtn = e.target;
-            const originalText = logoutBtn.textContent;
-            logoutBtn.textContent = 'Logging out...';
-            logoutBtn.style.pointerEvents = 'none';
+        const logoutBtn = document.getElementById('logoutBtn');
+const logoutModal = document.getElementById('logoutModal');
+const confirmYes = document.getElementById('confirmYes');
+const confirmNo = document.getElementById('confirmNo');
 
-            try {
-                const response = await fetch('/api/student/logout', {
-                    method: 'POST'
-                });
-                if (response.ok) {
-                    window.location.href = '/';
-                } else {
-                    logoutBtn.textContent = originalText;
-                    logoutBtn.style.pointerEvents = 'auto';
-                    alert('Logout failed. Please try again.');
-                }
-            } catch (error) {
-                console.error('Logout error:', error);
-                window.location.href = '/';
-            }
+// Show modal when logout clicked
+logoutBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    logoutModal.style.display = 'flex';
+});
+
+// If user clicks NO
+confirmNo.addEventListener('click', () => {
+    logoutModal.style.display = 'none';
+});
+
+// If user clicks YES
+confirmYes.addEventListener('click', async () => {
+    logoutModal.style.display = 'none';
+
+    try {
+        const response = await fetch('/api/student/logout', {
+            method: 'POST'
         });
+
+        if (response.ok) {
+            window.location.href = '/';
+        } else {
+            alert('Logout failed. Please try again.');
+        }
+    } catch (error) {
+        window.location.href = '/';
+    }
+});
+
     </script>
 
 </body>
