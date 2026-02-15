@@ -174,13 +174,14 @@
           <button class="btn" onclick="showDeleteTeacher()">
             Delete Teachers
           </button>
+          <button class="btn" onclick="showAddSubject()">Add Subject</button>
           <button class="btn" onclick="showAssignSubject()">
             Map Subject To Teacher
           </button>
           <button class="btn" onclick="showAssignClassTeacher()">
             Assign Class Teacher
           </button>
-          <button class="btn" onclick="showAddSubject()">Add Subject</button>
+          
 
           <button class="btn back" onclick="goBack()">Back</button>
         </div>
@@ -237,17 +238,23 @@
 
         <!-- VIEW TEACHERS -->
         <div id="viewTeacher" class="section">
-          <h2>Teachers</h2>
+          <h2>View Teachers</h2>
           <table>
             <thead>
               <tr>
                 <th>Name</th>
                 <th>Department</th>
                 <th>ID</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="teacherTable"></tbody>
           </table>
+
+          <p style="text-align:center; margin-top:15px; font-size:14px; color:#b60404;">
+  (★ Star marked teacher is the Class Teacher)
+</p>
+
           <!--<button class="btn back" onclick="goBack()">Back</button>-->
           <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
         </div>
@@ -264,6 +271,41 @@
           </select>
           <button class="btn" onclick="deleteTeacherData()">Delete</button>
           <!--<button class="btn back" onclick="goBack()">Back</button>-->
+          <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+        </div>
+
+        <!-- ADD SUBJECT -->
+        <div id="addSubject" class="section">
+          <h2>Add Subject</h2>
+
+          <label>Subject Name<span class="required">*</span></label>
+          <input id="sub_name" />
+
+          <label>Stream<span class="required">*</span></label>
+          <select id="sub_stream">
+            <option value="">Select</option>
+            <option value="BSCIT">Information Technology</option>
+            <option value="CS">Computer Science</option>
+          </select>
+
+          <label
+            >Year<span class="required" "
+              >*</span
+            ></label
+          >
+          <select id="sub_year" required >
+            <option value="">Select</option>
+            <option value="1">First Year</option>
+            <option value="2">Second Year</option>
+            <option value="3">Third Year</option>
+          </select>
+
+          <label>Semester<span class="required">*</span></label>
+          <select id="sub_semester">
+            <option value="">Select</option>
+          </select>
+
+          <button class="btn" onclick="saveSubject()">Save</button>
           <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
         </div>
 
@@ -330,40 +372,7 @@
           <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
         </div>
 
-        <!-- ADD SUBJECT -->
-        <div id="addSubject" class="section">
-          <h2>Add Subject</h2>
-
-          <label>Subject Name<span class="required">*</span></label>
-          <input id="sub_name" />
-
-          <label>Stream<span class="required">*</span></label>
-          <select id="sub_stream">
-            <option value="">Select</option>
-            <option value="BSCIT">Information Technology</option>
-            <option value="CS">Computer Science</option>
-          </select>
-
-          <label
-            >Year<span class="required" "
-              >*</span
-            ></label
-          >
-          <select id="sub_year" required >
-            <option value="">Select</option>
-            <option value="1">First Year</option>
-            <option value="2">Second Year</option>
-            <option value="3">Third Year</option>
-          </select>
-
-          <label>Semester<span class="required">*</span></label>
-          <select id="sub_semester">
-            <option value="">Select</option>
-          </select>
-
-          <button class="btn" onclick="saveSubject()">Save</button>
-          <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
-        </div>
+        
 
         <!-- ADD STUDENT -->
         <div id="addStudent" class="section">

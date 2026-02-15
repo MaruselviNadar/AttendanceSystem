@@ -9,7 +9,7 @@ def get_db_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="123456",  # Change to your MySQL password
+        password="root",  # Change to your MySQL password
         database="teacher"
     )
 
@@ -280,6 +280,31 @@ def assign_subject():
     db = get_db_connection()
     cursor = db.cursor()
 
+    # ✅ CHECK IF SUBJECT ALREADY ASSIGNED
+    cursor.execute("""
+        SELECT teacher_id FROM teacher_subject_mapping
+        WHERE subject_id=%s
+        AND stream=%s
+        AND year=%s
+        AND semester=%s
+    """, (
+        data["subject_id"],
+        data["stream"],
+        data["year"],
+        data["semester"]
+    ))
+
+    existing = cursor.fetchone()
+
+    if existing:
+        cursor.close()
+        db.close()
+        return jsonify({
+            "status": "fail",
+            "message": "This subject is already assigned to another teacher"
+        }), 400
+
+    # ✅ INSERT NEW ASSIGNMENT
     cursor.execute("""
         INSERT INTO teacher_subject_mapping
         (teacher_id, subject_id, stream, year, semester)
@@ -295,7 +320,12 @@ def assign_subject():
     db.commit()
     cursor.close()
     db.close()
-    return jsonify({"message": "Subject assigned successfully"})
+
+    return jsonify({
+        "status": "success",
+        "message": "Subject assigned successfully"
+    })
+
 # ---------- CLASS TEACHER ASSIGNMENT ----------
 @app.route("/api/assign-class-teacher", methods=["POST"])
 def assign_class_teacher():
