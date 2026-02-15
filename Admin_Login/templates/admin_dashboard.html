@@ -182,7 +182,6 @@
           </button>
           <button class="btn" onclick="showAddSubject()">Add Subject</button>
 
-
           <button class="btn back" onclick="goBack()">Back</button>
         </div>
 
@@ -283,7 +282,7 @@
           </select>
 
           <label>Year<span class="required">*</span></label>
-          <select id="as_year" required>
+          <select id="as_year" required onchange="updateSemesters()">
             <option value="">Select</option>
             <option value="1">First Year</option>
             <option value="2">Second Year</option>
@@ -293,12 +292,6 @@
           <label>Semester<span class="required">*</span></label>
           <select id="as_semester" required>
             <option value="">Select</option>
-            <option value="1">Sem I</option>
-            <option value="2">Sem II</option>
-            <option value="3">Sem III</option>
-            <option value="4">Sem IV</option>
-            <option value="5">Sem V</option>
-            <option value="6">Sem VI</option>
           </select>
 
           <label>Subject<span class="required">*</span></label>
@@ -339,41 +332,38 @@
 
         <!-- ADD SUBJECT -->
         <div id="addSubject" class="section">
-  <h2>Add Subject</h2>
+          <h2>Add Subject</h2>
 
-  <label>Subject Name<span class="required">*</span></label>
-  <input id="sub_name" />
+          <label>Subject Name<span class="required">*</span></label>
+          <input id="sub_name" />
 
-  <label>Stream<span class="required">*</span></label>
-  <select id="sub_stream">
-    <option value="">Select</option>
-    <option value="BSCIT">Information Technology</option>
-    <option value="CS">Computer Science</option>
-  </select>
+          <label>Stream<span class="required">*</span></label>
+          <select id="sub_stream">
+            <option value="">Select</option>
+            <option value="BSCIT">Information Technology</option>
+            <option value="CS">Computer Science</option>
+          </select>
 
-  <label>Year<span class="required">*</span></label>
-  <select id="sub_year">
-    <option value="">Select</option>
-    <option value="1">First Year</option>
-    <option value="2">Second Year</option>
-    <option value="3">Third Year</option>
-  </select>
+          <label
+            >Year<span class="required" "
+              >*</span
+            ></label
+          >
+          <select id="sub_year" required >
+            <option value="">Select</option>
+            <option value="1">First Year</option>
+            <option value="2">Second Year</option>
+            <option value="3">Third Year</option>
+          </select>
 
-  <label>Semester<span class="required">*</span></label>
-  <select id="sub_semester">
-    <option value="">Select</option>
-    <option value="1">Sem I</option>
-    <option value="2">Sem II</option>
-    <option value="3">Sem III</option>
-    <option value="4">Sem IV</option>
-    <option value="5">Sem V</option>
-    <option value="6">Sem VI</option>
-  </select>
+          <label>Semester<span class="required">*</span></label>
+          <select id="sub_semester">
+            <option value="">Select</option>
+          </select>
 
-  <button class="btn" onclick="saveSubject()">Save</button>
-  <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
-</div>
-
+          <button class="btn" onclick="saveSubject()">Save</button>
+          <button class="btn back" onclick="goBackToTeacherMenu()">Back</button>
+        </div>
 
         <!-- ADD STUDENT -->
         <div id="addStudent" class="section">
@@ -406,21 +396,21 @@
         <div id="viewStudent" class="section">
           <h2>Students</h2>
           <label>Department:</label>
-  <select id="filterDept" onchange="filterStudents()">
-    <option value="">All</option>
-    <option value="BSCIT">Information Technology</option>
-    <option value="CS">Computer Science</option>
-  </select>
+          <select id="filterDept" onchange="filterStudents()">
+            <option value="">All</option>
+            <option value="BSCIT">Information Technology</option>
+            <option value="CS">Computer Science</option>
+          </select>
 
-  <label style="margin-top:10px;">Year:</label>
-  <select id="filterYear" onchange="filterStudents()">
-    <option value="">All</option>
-    <option value="1">First Year</option>
-    <option value="2">Second Year</option>
-    <option value="3">Third Year</option>
-  </select>
+          <label style="margin-top: 10px">Year:</label>
+          <select id="filterYear" onchange="filterStudents()">
+            <option value="">All</option>
+            <option value="1">First Year</option>
+            <option value="2">Second Year</option>
+            <option value="3">Third Year</option>
+          </select>
 
-  <br /><br />
+          <br /><br />
 
           <table>
             <thead>
@@ -530,10 +520,9 @@
       }
 
       function showAddSubject() {
-  hideAll();
-  $("addSubject").style.display = "block";
-}
-
+        hideAll();
+        $("addSubject").style.display = "block";
+      }
 
       function showAddStudent() {
         hideAll();
@@ -576,11 +565,44 @@
 
 
       }*/
+      function updateSemesters() {
+        console.log("Function called"); // 👈 DEBUG LINE
+
+        let year = document.getElementById("as_year").value;
+        let semesterSelect = document.getElementById("as_semester");
+
+        semesterSelect.innerHTML = '<option value="">Select</option>';
+
+        if (year === "1") {
+          addOption(semesterSelect, "1", "Sem I");
+          addOption(semesterSelect, "2", "Sem II");
+        } else if (year === "2") {
+          addOption(semesterSelect, "3", "Sem III");
+          addOption(semesterSelect, "4", "Sem IV");
+        } else if (year === "3") {
+          addOption(semesterSelect, "5", "Sem V");
+          addOption(semesterSelect, "6", "Sem VI");
+        }
+      }
+
+      function addOption(select, value, text) {
+        let opt = document.createElement("option");
+        opt.value = value;
+        opt.text = text;
+        select.appendChild(opt);
+      }
       function saveTeacher() {
         const name = tname.value.trim();
         const dept = tdept.value.trim();
         const id = tid.value.trim();
         const pass = tpass.value.trim();
+
+        const nameRegex = /^[A-Za-z\s]+$/;
+
+        if (!nameRegex.test(name)) {
+          showAlert("Name should contain only alphabets", "red");
+          return;
+        }
 
         /* ✅ 1. EMPTY FIELD CHECK */
         if (name === "" || dept === "" || id === "" || pass === "") {
@@ -628,11 +650,14 @@
               return;
             }
 
-            d.forEach(
-              (t) =>
-                (teacherTable.innerHTML += `
+            d.forEach((t) => {
+              let star =
+                t.is_class_teacher === "YES"
+                  ? " <span class='required'>★</span>"
+                  : "";
+              teacherTable.innerHTML += `
       <tr>
-        <td>${t.name}</td>
+        <td>${t.name}${star}</td>
         <td>${t.department}</td>
         <td>${t.teacher_id}</td>
         <td>
@@ -642,8 +667,8 @@
           </button>
         </td>
       </tr>
-      `),
-            );
+      `;
+            });
           });
       }
 
@@ -744,9 +769,6 @@
         showDeleteAlert("Are you sure you want to delete this teacher?", id);
       }
 
-      
-
-
       function loadAssignTeachers() {
         fetch("/api/teachers")
           .then((r) => r.json())
@@ -778,7 +800,10 @@
       }
 
       as_stream.onchange = loadAssignSubjects;
-      as_year.onchange = loadAssignSubjects;
+      as_year.onchange = function () {
+        updateSemesters();
+        loadAssignSubjects;
+      };
       as_semester.onchange = loadAssignSubjects;
 
       /* Assign subject */
@@ -869,6 +894,13 @@
         const dept = utdept.value.trim();
         const id = utid.value.trim();
 
+        const nameRegex = /^[A-Za-z\s]+$/;
+
+        if (!nameRegex.test(name)) {
+          showAlert("Name should contain only alphabets", "red");
+          return;
+        }
+
         if (name === "" || dept === "") {
           showAlert("Fields cannot be empty");
           return;
@@ -890,41 +922,58 @@
           });
       }
 
-
       //add subject
       function saveSubject() {
-  const name = sub_name.value.trim();
-  const stream = sub_stream.value;
-  const year = sub_year.value;
-  const semester = sub_semester.value;
+        const name = sub_name.value.trim();
+        const stream = sub_stream.value;
+        const year = sub_year.value;
+        const semester = sub_semester.value;
 
-  if (!name || !stream || !year || !semester) {
-    showAlert("Fill all the fields", "red");
-    return;
-  }
+        if (!name || !stream || !year || !semester) {
+          showAlert("Fill all the fields", "red");
+          return;
+        }
 
-  fetch("/add_subject", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      subject_name: name,
-      stream: stream,
-      year: year,
-      semester: semester,
-    }),
-  })
-    .then((r) => r.json())
-    .then((d) => {
-      showAlert(d.message, d.status === "success" ? "green" : "red");
+        fetch("/add_subject", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subject_name: name,
+            stream: stream,
+            year: year,
+            semester: semester,
+          }),
+        })
+          .then((r) => r.json())
+          .then((d) => {
+            showAlert(d.message, d.status === "success" ? "green" : "red");
 
-      if (d.status === "success") {
-        sub_name.value = "";
-        sub_stream.value = "";
-        sub_year.value = "";
-        sub_semester.value = "";
+            if (d.status === "success") {
+              sub_name.value = "";
+              sub_stream.value = "";
+              sub_year.value = "";
+              sub_semester.value = "";
+            }
+          });
       }
-    });
-}
+
+      sub_year.onchange = function () {
+  let year = sub_year.value;
+  sub_semester.innerHTML = '<option value="">Select</option>';
+
+  if (year === "1") {
+    addOption(sub_semester, "1", "Sem I");
+    addOption(sub_semester, "2", "Sem II");
+  } 
+  else if (year === "2") {
+    addOption(sub_semester, "3", "Sem III");
+    addOption(sub_semester, "4", "Sem IV");
+  } 
+  else if (year === "3") {
+    addOption(sub_semester, "5", "Sem V");
+    addOption(sub_semester, "6", "Sem VI");
+  }
+};
 
       /*function saveStudent(){
 
@@ -1036,23 +1085,19 @@
 
       }*/
 
-      //delete Student 
+      //delete Student
       function deleteStudentData() {
-  const roll = deleteStudentList.value;
+        const roll = deleteStudentList.value;
 
-  if (!roll) {
-    showAlert("No student selected", "red");
-    return;
-  }
+        if (!roll) {
+          showAlert("No student selected", "red");
+          return;
+        }
 
-  selectedStudentRoll = roll;
+        selectedStudentRoll = roll;
 
-  showDeleteAlert(
-    "Do you really want to delete this student?",
-    roll
-  );
-}
-
+        showDeleteAlert("Do you really want to delete this student?", roll);
+      }
 
       hideAll();
       $("mainMenu").style.display = "block";
@@ -1084,25 +1129,25 @@
 
       //filter students
       function filterStudents() {
-  const dept = document.getElementById("filterDept").value;
-  const year = document.getElementById("filterYear").value;
+        const dept = document.getElementById("filterDept").value;
+        const year = document.getElementById("filterYear").value;
 
-  const rows = document.querySelectorAll("#studentTable tr");
+        const rows = document.querySelectorAll("#studentTable tr");
 
-  rows.forEach(row => {
-    const rowDept = row.cells[0]?.innerText;
-    const rowYear = row.cells[1]?.innerText;
+        rows.forEach((row) => {
+          const rowDept = row.cells[0]?.innerText;
+          const rowYear = row.cells[1]?.innerText;
 
-    if (
-      (dept === "" || rowDept === dept) &&
-      (year === "" || rowYear === year)
-    ) {
-      row.style.display = "";
-    } else {
-      row.style.display = "none";
-    }
-  });
-}
+          if (
+            (dept === "" || rowDept === dept) &&
+            (year === "" || rowYear === year)
+          ) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+      }
     </script>
     <!-- Custom Alert Box -->
     <div
@@ -1162,52 +1207,50 @@
       document.getElementById("alertCancel").onclick = closeDeleteAlert;
 
       document.getElementById("alertOk").onclick = function () {
+        // 🔵 STUDENT DELETE
+        if (selectedStudentRoll) {
+          fetch("/delete_student", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ roll_no: selectedStudentRoll }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              closeDeleteAlert();
 
-  // 🔵 STUDENT DELETE
-  if (selectedStudentRoll) {
-    fetch("/delete_student", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roll_no: selectedStudentRoll }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        closeDeleteAlert();
+              showAlert(data.message, "green");
 
-        showAlert(data.message, "green");
+              selectedStudentRoll = null;
+              loadStudentDelete();
+              loadStudents();
+            });
 
-        selectedStudentRoll = null;
-        loadStudentDelete();
-        loadStudents();
-      });
-
-    return;
-  }
-
-  // 🔵 TEACHER DELETE
-  if (selectedTeacherId) {
-    fetch("/delete_teacher", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ teacher_id: selectedTeacherId }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        closeDeleteAlert();
-
-        if (data.status === "success") {
-          showAlert(data.message, "green");
-        } else {
-          showAlert(data.message, "red");
+          return;
         }
 
-        selectedTeacherId = null;
-        loadTeacherDelete();
-        loadTeachers();
-      });
-  }
-};
+        // 🔵 TEACHER DELETE
+        if (selectedTeacherId) {
+          fetch("/delete_teacher", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ teacher_id: selectedTeacherId }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              closeDeleteAlert();
 
+              if (data.status === "success") {
+                showAlert(data.message, "green");
+              } else {
+                showAlert(data.message, "red");
+              }
+
+              selectedTeacherId = null;
+              loadTeacherDelete();
+              loadTeachers();
+            });
+        }
+      };
     </script>
   </body>
 </html>

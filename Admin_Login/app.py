@@ -9,7 +9,7 @@ def get_db_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="root",  # Change to your MySQL password
+        password="123456",  # Change to your MySQL password
         database="teacher"
     )
 
@@ -111,7 +111,19 @@ def add_teacher():
 def get_teachers():
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT name, department, teacher_id FROM teachers")
+    cursor.execute("""
+        SELECT 
+            t.teacher_id,
+            t.name,
+            t.department,
+            CASE 
+                WHEN c.teacher_id IS NOT NULL THEN 'YES'
+                ELSE 'NO'
+            END AS is_class_teacher
+        FROM teachers t
+        LEFT JOIN class_teacher_assignment c
+        ON t.teacher_id = c.teacher_id;
+    """)
     teachers = cursor.fetchall()
     cursor.close()
     db.close()

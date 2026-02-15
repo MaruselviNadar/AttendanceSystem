@@ -232,7 +232,9 @@ body{background-color:#f5f7f4;  background-image: url("{{ url_for('static', file
       <!--<div class="logo">TA</div>-->
       <div>
         <div class="title">Teacher Dashboard</div>
-        <div class="subtitle"></div>
+        <div class="subtitle" id="teacher-info">
+          Loading teachers info.....
+        </div>
              
       </div>
     </div>
@@ -1120,6 +1122,24 @@ document.addEventListener("DOMContentLoaded", () => {
         is_class_teacher: data.is_class_teacher,
         year: Number(data.year)   // force numeric
       };
+
+      const infoDiv = document.getElementById("teacher-info");
+
+      let text = `<h2><b>Welcome, ${data.name}<br/>
+         ID: ${data.id}<b></h2>`;
+     
+      if (data.is_class_teacher) {
+        let yearText = "";
+        if (data.year == 1) yearText = "First Year";
+        if (data.year == 2) yearText = "Second Year";
+        if (data.year == 3) yearText = "Third Year";
+
+        text += ` <h3><b> Class Teacher: ${yearText} ${data.stream}</b></h3>`;
+      } else {
+        text += ``;
+      }
+
+      infoDiv.innerHTML = text;
 
       // 🔁 Update dropdown once data is ready
       updateReportDropdown();

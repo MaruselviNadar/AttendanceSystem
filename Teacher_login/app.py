@@ -31,7 +31,7 @@ def get_db_connection(autocommit=False):
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="root",
+        password="123456",
         database="teacher",
         autocommit=autocommit,
     )
@@ -205,16 +205,39 @@ def get_class_teacher_assignment():
 #basic routing for class teacher
 @app.route("/api/teacher/class-teacher-info")
 def class_teacher_info():
-   info = get_class_teacher_assignment()
 
-   if not info:
-        return jsonify({"is_class_teacher": False})
+    teacher_id = session["teacher_id"]
 
-   return jsonify({
-      "is_class_teacher": True,
-      "stream": info["stream"],
-      "year": info["year"],
-      "academic_year": info["academic_year"]
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    cur.execute("""
+        SELECT 
+            t.id,
+            t.name,
+            t.teacher_id,
+            c.stream,
+            c.year,
+            c.academic_year
+        FROM teachers t
+        LEFT JOIN class_teacher_assignment c
+        ON t.teacher_id = c.teacher_id
+        WHERE t.teacher_id = %s
+    """, (teacher_id,))
+
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    is_class_teacher = row["stream"] is not None
+
+    return jsonify({
+        "id": row["teacher_id"],
+        "name": row["name"],
+        "is_class_teacher": is_class_teacher,
+        "stream": row["stream"],
+        "year": row["year"],
+        "academic_year": row["academic_year"]
     })
 
 
